@@ -8,6 +8,7 @@ function bench(img1, img2)
     img1_vec = vec(img1)
     img2_vec = vec(img2)
     nbins = length(bins)
+    # TODO: This will use 13 bins instead of 16, so it's not totally fair. Also uses Int64 bin type.
     stats_base_bench =
         @benchmarkable fit(StatsBase.Histogram, ($img1_vec, $img2_vec), nbins = $nbins)
 
