@@ -23,3 +23,23 @@ using Random
         end
     end
 end
+
+@testset "zero bins" begin
+    h = SingleThreadFixedWidth2DHistogram()
+    calc_hist!(h, rand(UInt8, 10, 10), rand(UInt8, 10, 10))
+
+    @test any(counts(h) .!= 0)
+
+    zero!(h)
+    @test all(counts(h) .== 0)
+end
+
+@testset "default hist bin type" begin
+    h = SingleThreadFixedWidth2DHistogram()
+    @test bin_type(h) == UInt8
+end
+
+@testset "custom hist bin type" begin
+    h = SingleThreadFixedWidth2DHistogram(Int32(0), Int32(16), 16)
+    @test bin_type(h) == Int32
+end
