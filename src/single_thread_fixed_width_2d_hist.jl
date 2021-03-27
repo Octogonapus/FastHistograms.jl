@@ -11,7 +11,11 @@ struct SingleThreadFixedWidth2DHistogram{BinType<:Integer} <: FastHistogram
 end
 
 """
-    SingleThreadFixedWidth2DHistogram(first_bin::BinType, last_bin::BinType, nbins::Int) where {BinType<:Int}
+    SingleThreadFixedWidth2DHistogram(
+        first_bin::BinType,
+        last_bin::BinType,
+        nbins::Int,
+    ) where {BinType<:Integer}
 
 A 2D histogram with fixed-width bins. The histogram computation is single-threaded by design and is therefore best
 suited to small data.
