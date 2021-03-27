@@ -3,9 +3,5 @@ uuid = "06971c4e-2824-4b19-bcf3-55442efb9bc7"
 authors = ["Octogonapus <firey45@gmail.com> and contributors"]
 version = "0.1.0"
 
-[deps]
-LoopVectorization = "bdcacae8-1622-11e9-2a5c-532679323890"
-
 [compat]
-LoopVectorization = "0.9, 0.10, 0.11, 0.12"
 julia = "1.5"

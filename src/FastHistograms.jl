@@ -1,7 +1,5 @@
 module FastHistograms
 
-using LoopVectorization
-
 abstract type FastHistogram end
 
 include("single_thread_fixed_width_2d_hist.jl")
