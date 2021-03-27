@@ -10,6 +10,9 @@ export FastHistogram, SingleThreadFixedWidth2DHistogram
 export calc_hist!, counts, zero!, bin_type
 
 """
+    calc_hist!(hist, img)
+    calc_hist!(hist, img1, img2)
+
 Computes the histogram of the given data. This function takes two or three arguments. The first argument must be the
 histogram structure (a subtype of `AbstractHistogram`). The second and optional third argument(s) must be the data
 to operate on. The type of the histogram determines whether one or two additional arguments are needed. For example,
@@ -23,6 +26,8 @@ example, `SingleThreadFixedWidth2DHistogram` does not implement thread-level par
 function calc_hist! end
 
 """
+    counts(hist)
+
 Returns the count in each bin of the histogram. This function takes one argument: the histogram structure.
 
 This function is not required to be thread-safe.
@@ -30,6 +35,8 @@ This function is not required to be thread-safe.
 function counts end
 
 """
+    zero!(hist)
+
 Sets the count in each bin to zero. This function takes one argument: the histogram structure.
 
 This function is not required to be thread-safe.
@@ -37,6 +44,8 @@ This function is not required to be thread-safe.
 function zero! end
 
 """
+    bin_type(hist)
+
 Returns the type of the bin used in the histogram. This function takes one argument: the histogram structure.
 
 This function is not required to be thread-safe.
@@ -61,6 +70,24 @@ img2[6:end, :] .= 0xff
 calc_hist!(h, img1, img2)
 
 @show counts(h) # Get the bin counts
+
+16×16 Matrix{Int64}:
+ 25  0  0  0  0  0  0  0  0  0  0  0  0  0  0  25
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
+ 25  0  0  0  0  0  0  0  0  0  0  0  0  0  0  25
 ```
 """
 FastHistograms
