@@ -19,7 +19,11 @@ suited to small data.
 The `first_bin` and `last_bin` are the values of the lowest and highest bins, respectively. `nbins` is the total number
 of bins.
 """
-function SingleThreadFixedWidth2DHistogram(first_bin::BinType, last_bin::BinType, nbins::Int) where {BinType<:Integer}
+function SingleThreadFixedWidth2DHistogram(
+    first_bin::BinType,
+    last_bin::BinType,
+    nbins::Int,
+) where {BinType<:Integer}
     norm = 1 / (last_bin - first_bin)
 
     weights = zeros(Int, nbins, nbins)
@@ -36,7 +40,8 @@ suited to small data.
 
 The `bins` must be given in strictly increasing order (e.g., `[0, 64, 128, 192]`).
 """
-SingleThreadFixedWidth2DHistogram(bins = 0x00:UInt8(16):0xff) = SingleThreadFixedWidth2DHistogram(first(bins), last(bins), length(bins))
+SingleThreadFixedWidth2DHistogram(bins = 0x00:UInt8(16):0xff) =
+    SingleThreadFixedWidth2DHistogram(first(bins), last(bins), length(bins))
 
 function calc_hist!(h::SingleThreadFixedWidth2DHistogram, img1, img2)
     rows = size(img1, 1)

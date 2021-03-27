@@ -20,32 +20,28 @@ once this function exits. This function is not required to be thread-safe. Imple
 descriptive names for their subtypes of `AbstractHistogram` that describe which optimizations are implemented. For
 example, `SingleThreadFixedWidth2DHistogram` does not implement thread-level parallelization by design.
 """
-function calc_hist!
-end
+function calc_hist! end
 
 """
 Returns the count in each bin of the histogram. This function takes one argument: the histogram structure.
 
 This function is not required to be thread-safe.
 """
-function counts
-end
+function counts end
 
 """
 Sets the count in each bin to zero. This function takes one argument: the histogram structure.
 
 This function is not required to be thread-safe.
 """
-function zero!
-end
+function zero! end
 
 """
 Returns the type of the bin used in the histogram. This function takes one argument: the histogram structure.
 
 This function is not required to be thread-safe.
 """
-function bin_type
-end
+function bin_type end
 
 """
 FastHistograms declares and implements a minimal histogram interface with a focus on speed.
@@ -70,4 +66,3 @@ calc_hist!(h, img1, img2)
 FastHistograms
 
 end
- 

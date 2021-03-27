@@ -8,7 +8,8 @@ function bench(img1, img2)
     img1_vec = vec(img1)
     img2_vec = vec(img2)
     nbins = length(bins)
-    stats_base_bench = @benchmarkable fit(StatsBase.Histogram, ($img1_vec, $img2_vec), nbins=$nbins)
+    stats_base_bench =
+        @benchmarkable fit(StatsBase.Histogram, ($img1_vec, $img2_vec), nbins = $nbins)
 
     return hist_bench, stats_base_bench
 end
