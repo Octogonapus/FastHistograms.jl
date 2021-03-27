@@ -1,0 +1,4 @@
+[deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+FastHistograms = "06971c4e-2824-4b19-bcf3-55442efb9bc7"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
