@@ -3,5 +3,11 @@ uuid = "06971c4e-2824-4b19-bcf3-55442efb9bc7"
 authors = ["Octogonapus <firey45@gmail.com> and contributors"]
 version = "0.1.0"
 
+[deps]
+ComputedFieldTypes = "459fdd68-db75-56b8-8c15-d717a790f88e"
+LoopVectorization = "bdcacae8-1622-11e9-2a5c-532679323890"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
 [compat]
 julia = "1.5"
