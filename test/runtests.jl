@@ -107,17 +107,21 @@ function test_parameterized_hist(bin_type, search_algorithm, parallelization)
             @test fh_counts == sb_counts
         end
 
-        @testset "regression 1 4x1" begin
+        @testset "regression 1 1x4 and 4x1" begin
             img1 = [0x00, 0x40, 0x80, 0xc0]
-            img2 = [0x00, 0x00, 0x40, 0x00]
 
             h = create_fast_histogram(bin_type, search_algorithm, parallelization, Val{1}(), 0x00, 0xff, 4)
 
             increment_bins!(h, img1)
-
             fh_counts = counts(h)
             sb_counts = StatsBase.fit(StatsBase.Histogram, vec(img1), 0x00:UInt8(64):0x10f).weights
+            @test fh_counts == sb_counts
 
+            # Also test the transpose of img1
+            zero!(h)
+            increment_bins!(h, transpose(img1))
+            fh_counts = counts(h)
+            sb_counts = StatsBase.fit(StatsBase.Histogram, vec(transpose(img1)), 0x00:UInt8(64):0x10f).weights
             @test fh_counts == sb_counts
         end
 
