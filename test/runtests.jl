@@ -18,6 +18,12 @@ function test_parameterized_hist(bin_type, search_algorithm, parallelization)
             0xff,
             16,
         )
+
+        # Sanity check traits
+        @test BinType(h) == bin_type
+        @test BinSearchAlgorithm(h) == search_algorithm
+        @test HistogramParallelization(h) == parallelization
+
         @test counts(h) == zeros(16, 16)
 
         img1 = zeros(10, 10)
@@ -37,6 +43,10 @@ function test_parameterized_hist(bin_type, search_algorithm, parallelization)
                 @test v == 0
             end
         end
+
+        # Test zero! works
+        zero!(h)
+        @test counts(h) == zeros(16, 16)
 
         # FixedWidth should be able to run without allocating in all cases
         if bin_type isa FixedWidth

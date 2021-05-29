@@ -19,7 +19,7 @@ Requires these functions to be defined:
 """
 struct BinarySearch <: BinSearchAlgorithm end
 
-BinSearchAlgorithm(::Type) = error("")
+BinSearchAlgorithm(t) = error("BinSearchAlgorithm not defined for $(typeof(t))")
 
 """
     bin_search(h, data)
