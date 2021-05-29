@@ -19,8 +19,21 @@ HistogramParallelization(::FixedWidthHistogram{N,E,B,P}) where {N,E,B,P} = P()
 eltype(::FixedWidthHistogram{N,E,B,P}) where {N,E,B,P} = E
 
 """
-Creates a histogram for fixed-width bins. The `first_bin` and `last_bin` are the values of the lowest
-and highest bins, respectively. `nbins` is the number of bins (not the number of edges).
+    create_fast_histogram(
+        ::FixedWidth,
+        ::B,
+        ::P,
+        ::Dims,
+        first_bin::BinEltype,
+        last_bin::BinEltype,
+        nbins::Int,
+    ) where {N,BinEltype<:Real,B<:BinSearchAlgorithm,P<:HistogramParallelization,Dims}
+
+Creates a histogram for fixed-width bins.
+`B` and `P` can be any bin search algorithm or parallelization scheme, respectively.
+`Dims` is a `Val` representing the number of dimensions of the histogram; it can be `Val{1}()` or `Val{2}()`.
+The `first_bin` and `last_bin` are the values of the lowest and highest bins, respectively.
+`nbins` is the number of bins (not the number of edges).
 """
 function create_fast_histogram(
     ::FixedWidth,
