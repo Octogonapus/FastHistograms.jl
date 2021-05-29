@@ -1,179 +1,131 @@
 @computed struct SingleThreadFixedWidth2DHistogram{
     N,
     BinEltype<:Real,
+    B<:BinSearchAlgorithm,
     P<:HistogramParallelization,
-} <: FastHistogram{FixedWidth,Arithmetic,P}
+}
     weights::Array{Int,N}
     subweights::Array{Int,N + 1}
     norm::Float32
     nbins::Int
     binmin::BinEltype
+    bin_ranges::Vector{BinEltype}
 end
 
 BinType(::SingleThreadFixedWidth2DHistogram) = FixedWidth()
+BinSearchAlgorithm(::SingleThreadFixedWidth2DHistogram{N,E,B,P}) where {N,E,B,P} = B()
+HistogramParallelization(::SingleThreadFixedWidth2DHistogram{N,E,B,P}) where {N,E,B,P} = P()
 
-BinSearchAlgorithm(::SingleThreadFixedWidth2DHistogram) = Arithmetic()
-
-HistogramParallelization(
-    ::SingleThreadFixedWidth2DHistogram{N,B,P},
-) where {N,B,P<:HistogramParallelization} = P()
-
-eltype(::SingleThreadFixedWidth2DHistogram{N,B,P}) where {N,B,P} = B
+eltype(::SingleThreadFixedWidth2DHistogram{N,E,B,P}) where {N,E,B,P} = E
 
 """
-Creates a fixed-width histogram for small 1D data. The `first_bin` and `last_bin` are the values of the lowest
+Creates a histogram for fixed-width bins. The `first_bin` and `last_bin` are the values of the lowest
 and highest bins, respectively. `nbins` is the number of bins (not the number of edges).
 """
 function create_fast_histogram(
     ::FixedWidth,
-    ::Arithmetic,
+    ::B,
     ::P,
-    ::Val{1},
+    ::Dims,
     first_bin::BinEltype,
     last_bin::BinEltype,
     nbins::Int,
-) where {N,BinEltype<:Real,P<:HistogramParallelization}
+) where {N,BinEltype<:Real,B<:BinSearchAlgorithm,P<:HistogramParallelization,Dims}
     norm = 1 / (last_bin - first_bin)
 
-    weights = zeros(Int, nbins)
-    subweights = zeros(Int, nbins, 4)
+    weights = create_weights(Dims, nbins)
+    subweights = create_subweights(Dims, nbins)
 
-    SingleThreadFixedWidth2DHistogram{1,BinEltype,P}(
+    if BinEltype <: Integer
+        bin_ranges = ceil.(BinEltype, range(first_bin; stop=last_bin, length=nbins+1))
+    else
+        bin_ranges = collect(BinEltype, range(first_bin; stop=last_bin, length=nbins+1))
+    end
+
+    SingleThreadFixedWidth2DHistogram{dims_number(Dims),BinEltype,B,P}(
         weights,
         subweights,
         norm,
         nbins,
         first_bin,
+        bin_ranges,
     )
 end
 
-"""
-Creates a fixed-width histogram for small 2D data. The `first_bin` and `last_bin` are the values of the lowest
-and highest bins, respectively. `nbins` is the number of bins per axis (not the number of edges).
-"""
-function create_fast_histogram(
-    ::FixedWidth,
-    ::Arithmetic,
-    ::P,
-    ::Val{2},
-    first_bin::BinEltype,
-    last_bin::BinEltype,
-    nbins::Int,
-) where {N,BinEltype<:Real,P<:HistogramParallelization}
-    norm = 1 / (last_bin - first_bin)
+create_weights(::Type{Val{1}}, nbins) = zeros(Int, nbins)
+create_weights(::Type{Val{2}}, nbins) = zeros(Int, nbins, nbins)
+create_subweights(::Type{Val{1}}, nbins) = zeros(Int, nbins, 4)
+create_subweights(::Type{Val{2}}, nbins) = zeros(Int, nbins, nbins, 4)
+dims_number(::Type{Val{1}}) = 1
+dims_number(::Type{Val{2}}) = 2
 
-    weights = zeros(Int, nbins, nbins)
-    subweights = zeros(Int, nbins, nbins, 4)
-
-    SingleThreadFixedWidth2DHistogram{2,BinEltype,P}(
-        weights,
-        subweights,
-        norm,
-        nbins,
-        first_bin,
-    )
-end
-
+# For BinSearchAlgorithm Arithmetic
 nbins(h::SingleThreadFixedWidth2DHistogram) = h.nbins
 binmin(h::SingleThreadFixedWidth2DHistogram) = h.binmin
 norm(h::SingleThreadFixedWidth2DHistogram) = h.norm
 
-bin_search(h, data) = bin_search(BinSearchAlgorithm(h), h, data)
+# For BinSearchAlgorithm BinarySearch
+bin_ranges(h::SingleThreadFixedWidth2DHistogram) = h.bin_ranges
 
-function bin_search(::Arithmetic, h::SingleThreadFixedWidth2DHistogram{N,B,P}, data) where {N,B,P}
-    # Using `min(nbins, max(1, ceil(<computed index>)))` here is consistent with StatsBase, but it's 2 μs slower than
-    # truncating. Therefore, we add 1 and then truncate to get the same result.
-    return clamp(trunc(Int, (data - binmin(h)) * norm(h) * nbins(h) + 1), 1, nbins(h))
-end
+@propagate_inbounds increment_weight!(h::SingleThreadFixedWidth2DHistogram, is...) = h.weights[is...] += 1
+@propagate_inbounds increment_subweight!(h::SingleThreadFixedWidth2DHistogram, is...) = h.subweights[is...] += 1
+
+sum_subweights!(h::SingleThreadFixedWidth2DHistogram) = sum!(h.weights, h.subweights)
 
 function bin_update!(
-    h::SingleThreadFixedWidth2DHistogram{1,B,NoParallelization},
+    ::Arithmetic,
+    ::SIMD,
+    h::SingleThreadFixedWidth2DHistogram,
     data::Union{AbstractVector,AbstractMatrix},
-) where {N,B}
-    for c = 1:size(data, 2)
-        for r = 1:size(data, 1)
-            @inbounds x = data[r, c]
-            i = bin_search(h, x)
-            @inbounds h.weights[i] += 1
-        end
-    end
-
-    nothing
-end
-
-function bin_update!(
-    h::SingleThreadFixedWidth2DHistogram{2,B,NoParallelization},
-    img1::Union{AbstractVector,AbstractMatrix},
-    img2::Union{AbstractVector,AbstractMatrix},
-) where {N,B}
-    for c = 1:size(img1, 2)
-        for r = 1:size(img1, 1)
-            @inbounds tx = img1[r, c]
-            @inbounds ty = img2[r, c]
-            ix = bin_search(h, tx)
-            iy = bin_search(h, ty)
-            @inbounds h.weights[ix, iy] += 1
-        end
-    end
-
-    nothing
-end
-
-function bin_update!(
-    h::SingleThreadFixedWidth2DHistogram{1,B,SIMD},
-    data::Union{AbstractVector,AbstractMatrix},
-) where {N,B}
+)
     rows = size(data, 1)
-    cols = size(data, 2)
     align_rows = floor(Int, rows / 3)
 
-    subweights = h.subweights
-
-    for c = 1:cols
+    for c = 1:size(data, 2)
         r = 1
 
         while r < align_rows
-            # TODO: LoopVectorization regression on this code
             @turbo for i = 0:2
                 @inbounds tx = data[r+i, c]
-                @inbounds subweights[bin_search(h, tx), i+1] += 1
+                @inbounds h.subweights[bin_search(h, tx), i+1] += 1
+                # @inbounds increment_subweight!(h, bin_search(h, tx), i+1)
             end
             r += 3
         end
 
         for r2 = r:rows
             @inbounds tx = data[r2, c]
-            @inbounds subweights[bin_search(h, tx), 1] += 1
+            @inbounds h.subweights[bin_search(h, tx), 1] += 1
+            # @inbounds increment_subweight!(h, bin_search(h, tx), 1)
         end
     end
 
-    sum!(h.weights, subweights)
+    sum_subweights!(h)
 
     nothing
 end
 
 function bin_update!(
-    h::SingleThreadFixedWidth2DHistogram{2,B,SIMD},
+    ::Arithmetic,
+    ::SIMD,
+    h::SingleThreadFixedWidth2DHistogram,
     img1::Union{AbstractVector,AbstractMatrix},
     img2::Union{AbstractVector,AbstractMatrix},
-) where {N,B}
+)
     rows = size(img1, 1)
-    cols = size(img1, 2)
     align_rows = floor(Int, rows / 4)
 
-    subweights = h.subweights
-
-    for c = 1:cols
+    for c = 1:size(img1, 2)
         r = 1
 
         while r < align_rows
-            # TODO: LoopVectorization regression on this code
             @turbo for i = 0:3
                 @inbounds tx = img1[r+i, c]
                 @inbounds ty = img2[r+i, c]
                 ix = bin_search(h, tx)
                 iy = bin_search(h, ty)
-                @inbounds subweights[ix, iy, i+1] += 1
+                @inbounds h.subweights[ix, iy, i+1] += 1
+                # @inbounds increment_subweight!(h, ix, iy, i+1)
             end
             r += 4
         end
@@ -183,11 +135,12 @@ function bin_update!(
             @inbounds ty = img2[r2, c]
             ix = bin_search(h, tx)
             iy = bin_search(h, ty)
-            @inbounds subweights[ix, iy, 1] += 1
+            @inbounds h.subweights[ix, iy, 1] += 1
+            #@inbounds increment_subweight!(h, ix, iy, 1)
         end
     end
 
-    sum!(h.weights, subweights)
+    sum_subweights!(h)
 
     nothing
 end

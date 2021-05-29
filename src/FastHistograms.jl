@@ -1,13 +1,15 @@
 module FastHistograms
 
-import Base: eltype
+import Base: eltype, @propagate_inbounds
 using ComputedFieldTypes
 using LoopVectorization
 
 include("traits.jl")
+include("bin_search.jl")
+include("bin_update.jl")
+
 include("single_thread_fixed_width_2d_hist.jl")
 
-export FastHistogram, SingleThreadFixedWidth2DHistogram
 export create_fast_histogram, bin_search, bin_update!, counts, zero!
 
 function create_fast_histogram end
