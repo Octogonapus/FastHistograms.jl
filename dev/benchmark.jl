@@ -37,5 +37,8 @@ end
 function run_all_benchmarks()
     img1 = rand(UInt8, 40, 80)
     img2 = rand(UInt8, 40, 80)
-    run.(bench_noparallel(img1, img2)) # SB=32μs, FH_np=13μs, FH_simd=12μs
+    tune!.(bench_noparallel(img1, img2))
+    println(run.(bench_noparallel(img1, img2))) # SB=32μs, FH_np=12μs, FH_simd=15μs
 end
+
+run_all_benchmarks()

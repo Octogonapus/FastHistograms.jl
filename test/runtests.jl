@@ -4,7 +4,7 @@ using Random
 import StatsBase
 
 @testset "FastHistograms.jl" begin
-    @testset "histogram computations parameterized by parallelization" for parallelization in
+    @testset "histogram computations parameterized by parallelization ($parallelization)" for parallelization in
                                                                            [
         FastHistograms.NoParallelization(),
         FastHistograms.SIMD(),

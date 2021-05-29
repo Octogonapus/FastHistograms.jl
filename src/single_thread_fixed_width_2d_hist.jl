@@ -33,7 +33,7 @@ function create_fast_histogram(
     norm = 1 / (last_bin - first_bin)
 
     weights = zeros(Int, nbins)
-    subweights = zeros(Int, nbins, 3)
+    subweights = zeros(Int, nbins, 4)
 
     SingleThreadFixedWidth2DHistogram{1,BinEltype,P}(
         weights,
@@ -60,7 +60,7 @@ function create_fast_histogram(
     norm = 1 / (last_bin - first_bin)
 
     weights = zeros(Int, nbins, nbins)
-    subweights = zeros(Int, nbins, nbins, 3)
+    subweights = zeros(Int, nbins, nbins, 4)
 
     SingleThreadFixedWidth2DHistogram{2,BinEltype,P}(
         weights,
@@ -89,30 +89,13 @@ function bin_update!(
     h::SingleThreadFixedWidth2DHistogram{1,B,NoParallelization},
     data::Union{AbstractVector,AbstractMatrix},
 ) where {N,B}
-    rows = size(data, 1)
-    cols = size(data, 2)
-    align_rows = floor(Int, rows / 3)
-
-    subweights = h.subweights
-
-    for c = 1:cols
-        r = 1
-
-        while r < align_rows
-            for i = 0:2
-                @inbounds tx = data[r+i, c]
-                @inbounds subweights[bin_search(h, tx), i+1] += 1
-            end
-            r += 3
-        end
-
-        for r2 = r:rows
-            @inbounds tx = data[r2, c]
-            @inbounds subweights[bin_search(h, tx), 1] += 1
+    for c = 1:size(data, 2)
+        for r = 1:size(data, 1)
+            @inbounds x = data[r, c]
+            i = bin_search(h, x)
+            @inbounds h.weights[i] += 1
         end
     end
-
-    sum!(h.weights, subweights)
 
     nothing
 end
@@ -122,36 +105,15 @@ function bin_update!(
     img1::Union{AbstractVector,AbstractMatrix},
     img2::Union{AbstractVector,AbstractMatrix},
 ) where {N,B}
-    rows = size(img1, 1)
-    cols = size(img1, 2)
-    align_rows = floor(Int, rows / 3)
-
-    subweights = h.subweights
-
-    for c = 1:cols
-        r = 1
-
-        while r < align_rows
-            for i = 0:2
-                @inbounds tx = img1[r+i, c]
-                @inbounds ty = img2[r+i, c]
-                ix = bin_search(h, tx)
-                iy = bin_search(h, ty)
-                @inbounds subweights[ix, iy, i+1] += 1
-            end
-            r += 3
-        end
-
-        for r2 = r:rows
-            @inbounds tx = img1[r2, c]
-            @inbounds ty = img2[r2, c]
+    for c = 1:size(img1, 2)
+        for r = 1:size(img1, 1)
+            @inbounds tx = img1[r, c]
+            @inbounds ty = img2[r, c]
             ix = bin_search(h, tx)
             iy = bin_search(h, ty)
-            @inbounds subweights[ix, iy, 1] += 1
+            @inbounds h.weights[ix, iy] += 1
         end
     end
-
-    sum!(h.weights, subweights)
 
     nothing
 end
@@ -171,7 +133,7 @@ function bin_update!(
 
         while r < align_rows
             # TODO: LoopVectorization regression on this code
-            for i = 0:2 # @avx
+            @turbo for i = 0:2
                 @inbounds tx = data[r+i, c]
                 @inbounds subweights[bin_search(h, tx), i+1] += 1
             end
@@ -196,7 +158,7 @@ function bin_update!(
 ) where {N,B}
     rows = size(img1, 1)
     cols = size(img1, 2)
-    align_rows = floor(Int, rows / 3)
+    align_rows = floor(Int, rows / 4)
 
     subweights = h.subweights
 
@@ -205,14 +167,14 @@ function bin_update!(
 
         while r < align_rows
             # TODO: LoopVectorization regression on this code
-            for i = 0:2 # @avx
+            @turbo for i = 0:3
                 @inbounds tx = img1[r+i, c]
                 @inbounds ty = img2[r+i, c]
                 ix = bin_search(h, tx)
                 iy = bin_search(h, ty)
                 @inbounds subweights[ix, iy, i+1] += 1
             end
-            r += 3
+            r += 4
         end
 
         for r2 = r:rows
