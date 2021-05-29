@@ -10,7 +10,7 @@ function bench_noparallel(img1, img2)
         0xff,
         16,
     )
-    hist_bench_noparallel = @benchmarkable bin_update!($h_noparallel, $img1, $img2)
+    hist_bench_noparallel = @benchmarkable increment_bins!($h_noparallel, $img1, $img2)
 
     h_noparallel_bs = create_fast_histogram(
         FastHistograms.FixedWidth(),
@@ -21,7 +21,7 @@ function bench_noparallel(img1, img2)
         0xff,
         16,
     )
-    hist_bench_noparallel_bs = @benchmarkable bin_update!($h_noparallel, $img1, $img2)
+    hist_bench_noparallel_bs = @benchmarkable increment_bins!($h_noparallel, $img1, $img2)
 
     h_simd = create_fast_histogram(
         FastHistograms.FixedWidth(),
@@ -32,7 +32,7 @@ function bench_noparallel(img1, img2)
         0xff,
         16,
     )
-    hist_bench_simd = @benchmarkable bin_update!($h_simd, $img1, $img2)
+    hist_bench_simd = @benchmarkable increment_bins!($h_simd, $img1, $img2)
 
     img1_vec = vec(img1)
     img2_vec = vec(img2)

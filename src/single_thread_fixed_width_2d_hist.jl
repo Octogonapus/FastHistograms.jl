@@ -72,7 +72,7 @@ bin_ranges(h::FixedWidthHistogram) = h.bin_ranges
 
 sum_subweights!(h::FixedWidthHistogram) = sum!(h.weights, h.subweights)
 
-function bin_update!(
+function increment_bins!(
     ::Arithmetic,
     ::SIMD,
     h::FixedWidthHistogram,
@@ -105,7 +105,7 @@ function bin_update!(
     nothing
 end
 
-function bin_update!(
+function increment_bins!(
     ::Arithmetic,
     ::SIMD,
     h::FixedWidthHistogram,

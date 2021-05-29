@@ -1,17 +1,17 @@
 
 """
-    bin_update!(h, data)
+    increment_bins!(h, data)
 
 Increments the bin counts for a 1D histogram `h` using the `data`.
 """
-bin_update!(h, data) = bin_update!(BinSearchAlgorithm(h), HistogramParallelization(h), h, data)
+increment_bins!(h, data) = increment_bins!(BinSearchAlgorithm(h), HistogramParallelization(h), h, data)
 
 """
-    bin_update!(h, data1, data2)
+    increment_bins!(h, data1, data2)
 
 Increments the bin counts for a 2D histogram `h` using the data `data1` and `data2`.
 """
-bin_update!(h, data1, data2) = bin_update!(BinSearchAlgorithm(h), HistogramParallelization(h), h, data1, data2)
+increment_bins!(h, data1, data2) = increment_bins!(BinSearchAlgorithm(h), HistogramParallelization(h), h, data1, data2)
 
 """
     increment_weight!(h, is...)
@@ -51,7 +51,7 @@ Sets all bin counts of the histogram `h` to zero. All histograms must implement 
 """
 zero!(h) = error("zero! not implemented for $(typeof(h))")
 
-function bin_update!(
+function increment_bins!(
     ::BinSearchAlgorithm,
     ::NoParallelization,
     h,
@@ -68,7 +68,7 @@ function bin_update!(
     nothing
 end
 
-function bin_update!(
+function increment_bins!(
     ::BinSearchAlgorithm,
     ::NoParallelization,
     h,

@@ -29,7 +29,7 @@ function test_parameterized_hist(
         img2 = zeros(10, 10)
         img2[6:end, :] .= 0xff
 
-        bin_update!(h, img1, img2)
+        increment_bins!(h, img1, img2)
         for (i, v) in pairs(counts(h))
             if i == CartesianIndex((1, 1)) ||
             i == CartesianIndex((16, 1)) ||
@@ -70,7 +70,7 @@ function test_parameterized_hist(
         # 0x40 0x00 = 2 1
         # 0xc0 0x00 = 4 1
 
-        bin_update!(h, img1, img2)
+        increment_bins!(h, img1, img2)
         @test counts(h) == [
             1 0 0 0
             1 0 0 0
@@ -101,7 +101,7 @@ function test_parameterized_hist(
                 4,
             )
 
-            bin_update!(h, img1, img2)
+            increment_bins!(h, img1, img2)
 
             fh_counts = counts(h)
             sb_counts =
@@ -128,7 +128,7 @@ function test_parameterized_hist(
                 4,
             )
 
-            bin_update!(h, img1)
+            increment_bins!(h, img1)
 
             fh_counts = counts(h)
             sb_counts =
@@ -157,7 +157,7 @@ function test_parameterized_hist(
                     16,
                 )
 
-                bin_update!(h, img1, img2)
+                increment_bins!(h, img1, img2)
 
                 fh_counts = counts(h)
 
@@ -195,7 +195,7 @@ function test_parameterized_hist(
                     16,
                 )
 
-                bin_update!(h, img1, img2)
+                increment_bins!(h, img1, img2)
 
                 fh_counts = counts(h)
                 sb_counts =
@@ -232,7 +232,7 @@ function test_parameterized_hist(
                     16,
                 )
 
-                bin_update!(h, img1)
+                increment_bins!(h, img1)
 
                 fh_counts = counts(h)
                 sb_counts =
@@ -284,7 +284,7 @@ invalid_combination(::BinType, ::BinarySearch, ::SIMD) = true
             16,
         )
 
-        bin_update!(h, rand(UInt8, 10, 10), rand(UInt8, 10, 10))
+        increment_bins!(h, rand(UInt8, 10, 10), rand(UInt8, 10, 10))
 
         @test any(counts(h) .!= 0)
 

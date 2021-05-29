@@ -10,11 +10,11 @@ include("bin_update.jl")
 
 include("single_thread_fixed_width_2d_hist.jl")
 
-export create_fast_histogram, bin_search, bin_update!, counts, zero!
+export create_fast_histogram, bin_search, increment_bins!, counts, zero!
 
 function create_fast_histogram end
 function bin_search end
-function bin_update! end
+function increment_bins! end
 
 """
     counts(hist)
