@@ -7,8 +7,7 @@ using LoopVectorization
 include("traits.jl")
 include("bin_search.jl")
 include("bin_update.jl")
-
-include("single_thread_fixed_width_2d_hist.jl")
+include("fixed_width_histogram.jl")
 
 export create_fast_histogram, bin_search, increment_bins!, counts, zero!
 
