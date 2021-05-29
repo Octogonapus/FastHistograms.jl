@@ -5,9 +5,10 @@ using FastHistograms: HistogramParallelization, NoParallelization, SIMD
 using Test
 using Random
 import StatsBase
+using BenchmarkTools
 
 function test_parameterized_hist(bin_type, search_algorithm, parallelization)
-    @testset "single threaded fixed width 2D" begin
+    @testset "2D 16x16 corners" begin
         h = create_fast_histogram(
             bin_type,
             search_algorithm,
@@ -36,9 +37,15 @@ function test_parameterized_hist(bin_type, search_algorithm, parallelization)
                 @test v == 0
             end
         end
+
+        # FixedWidth should be able to run without allocating in all cases
+        if bin_type isa FixedWidth
+            bench = @benchmarkable increment_bins!($h, $img1, $img2)
+            @test allocs(run(bench)) == 0
+        end
     end
 
-    @testset "4x4" begin
+    @testset "2D 4x4" begin
         h = create_fast_histogram(
             bin_type,
             search_algorithm,
@@ -65,6 +72,10 @@ function test_parameterized_hist(bin_type, search_algorithm, parallelization)
         # 0x80 0x40 = 3 2
         # 0x40 0x00 = 2 1
         # 0xc0 0x00 = 4 1
+        @test bin_search(h, 0x00) == 1
+        @test bin_search(h, 0x40) == 2
+        @test bin_search(h, 0x80) == 3
+        @test bin_search(h, 0xc0) == 4
 
         increment_bins!(h, img1, img2)
         @test counts(h) == [
@@ -255,9 +266,9 @@ invalid_combination(::BinType, ::BinarySearch, ::SIMD) = true
 
     @testset "histogram computations BinType=$(bin_type)" for bin_type in bin_types
         @testset "BinSearchAlgorithm=$(search_algorithm)" for search_algorithm in
-            search_algorithms
+                                                              search_algorithms
             @testset "HistogramParallelization=$(parallelization)" for parallelization in
-                parallelizations
+                                                                       parallelizations
                 if invalid_combination(bin_type, search_algorithm, parallelization)
                     break
                 end

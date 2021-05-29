@@ -27,7 +27,7 @@ create_fast_histogram(
     ::BinType,
     ::BinSearchAlgorithm,
     ::HistogramParallelization,
-    args...
+    args...,
 ) = error("Not implemented.")
 
 """
