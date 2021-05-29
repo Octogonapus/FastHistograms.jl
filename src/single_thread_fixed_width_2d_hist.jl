@@ -11,10 +11,13 @@
 end
 
 BinType(::SingleThreadFixedWidth2DHistogram) = FixedWidth()
+
 BinSearchAlgorithm(::SingleThreadFixedWidth2DHistogram) = Arithmetic()
+
 HistogramParallelization(
     ::SingleThreadFixedWidth2DHistogram{N,B,P},
 ) where {N,B,P<:HistogramParallelization} = P()
+
 eltype(::SingleThreadFixedWidth2DHistogram{N,B,P}) where {N,B,P} = B
 
 """
@@ -71,18 +74,16 @@ function create_fast_histogram(
     )
 end
 
-# TODO: Type trait definition is slow?
-# nbins(h::SingleThreadFixedWidth2DHistogram) = h.nbins
-# binmin(h::SingleThreadFixedWidth2DHistogram) = h.binmin
-# norm(h::SingleThreadFixedWidth2DHistogram) = h.norm
-# function bin_search(::Arithmetic, h, data) where {T,P}
-#     return min(nbins(h), max(1, trunc(Int, (data - binmin(h)) * norm(h) * nbins(h) + 1)))
-# end
+nbins(h::SingleThreadFixedWidth2DHistogram) = h.nbins
+binmin(h::SingleThreadFixedWidth2DHistogram) = h.binmin
+norm(h::SingleThreadFixedWidth2DHistogram) = h.norm
 
-function bin_search(h::SingleThreadFixedWidth2DHistogram{N,B,P}, data) where {N,B,P}
+bin_search(h, data) = bin_search(BinSearchAlgorithm(h), h, data)
+
+function bin_search(::Arithmetic, h::SingleThreadFixedWidth2DHistogram{N,B,P}, data) where {N,B,P}
     # Using `min(nbins, max(1, ceil(<computed index>)))` here is consistent with StatsBase, but it's 2 μs slower than
     # truncating. Therefore, we add 1 and then truncate to get the same result.
-    return min(h.nbins, max(1, trunc(Int, (data - h.binmin) * h.norm * h.nbins + 1)))
+    return clamp(trunc(Int, (data - binmin(h)) * norm(h) * nbins(h) + 1), 1, nbins(h))
 end
 
 function bin_update!(

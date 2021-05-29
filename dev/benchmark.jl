@@ -1,4 +1,4 @@
-using FastHistograms, StatsBase, BenchmarkTools, DataFrames
+using FastHistograms, StatsBase, BenchmarkTools, DataFrames, PrettyTables
 
 function bench_noparallel(img1, img2)
     h_noparallel = create_fast_histogram(
@@ -34,11 +34,20 @@ function bench_noparallel(img1, img2)
     return stats_base_bench, hist_bench_noparallel, hist_bench_simd
 end
 
+bench_df_row(trial) = [time(trial), gctime(trial), allocs(trial), memory(trial)]
+
 function run_all_benchmarks()
     img1 = rand(UInt8, 40, 80)
     img2 = rand(UInt8, 40, 80)
     tune!.(bench_noparallel(img1, img2))
-    println(run.(bench_noparallel(img1, img2))) # SB=32μs, FH_np=12μs, FH_simd=15μs
+    results = run.(bench_noparallel(img1, img2))
+    df = DataFrame(
+        "Rows" => ["Expected Time (ns)", "Min Time (ns)", "GC Time (ns)", "Allocs (B)", "Memory (B)"],
+        "StatsBase" => [32000, bench_df_row(results[1])...],
+        "FH (NoParallel)" => [12000, bench_df_row(results[2])...],
+        "FH (SIMD)" => [15000, bench_df_row(results[3])...],
+    )
+    pretty_table(df)
 end
 
 run_all_benchmarks()
