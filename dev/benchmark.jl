@@ -42,7 +42,10 @@ function bench_noparallel(img1, img2)
         (0x00:UInt8(16):0x10f, 0x00:UInt8(16):0x10f),
     )
 
-    return stats_base_bench, hist_bench_noparallel, hist_bench_noparallel_bs, hist_bench_simd
+    return stats_base_bench,
+    hist_bench_noparallel,
+    hist_bench_noparallel_bs,
+    hist_bench_simd
 end
 
 bench_df_row(trial) = [time(trial), gctime(trial), allocs(trial), memory(trial)]
@@ -53,7 +56,13 @@ function run_all_benchmarks()
     tune!.(bench_noparallel(img1, img2))
     results = run.(bench_noparallel(img1, img2))
     df = DataFrame(
-        "Rows" => ["Expected Time (ns)", "Min Time (ns)", "GC Time (ns)", "Allocs (B)", "Memory (B)"],
+        "Rows" => [
+            "Expected Time (ns)",
+            "Min Time (ns)",
+            "GC Time (ns)",
+            "Allocs (B)",
+            "Memory (B)",
+        ],
         "StatsBase" => [32000, bench_df_row(results[1])...],
         "FH (NoParallel)" => [12000, bench_df_row(results[2])...],
         "FH (NoParallel, BS)" => [12000, bench_df_row(results[3])...],

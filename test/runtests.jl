@@ -6,11 +6,7 @@ using Test
 using Random
 import StatsBase
 
-function test_parameterized_hist(
-    bin_type,
-    search_algorithm,
-    parallelization,
-)
+function test_parameterized_hist(bin_type, search_algorithm, parallelization)
     @testset "single threaded fixed width 2D" begin
         h = create_fast_histogram(
             bin_type,
@@ -32,9 +28,9 @@ function test_parameterized_hist(
         increment_bins!(h, img1, img2)
         for (i, v) in pairs(counts(h))
             if i == CartesianIndex((1, 1)) ||
-            i == CartesianIndex((16, 1)) ||
-            i == CartesianIndex((1, 16)) ||
-            i == CartesianIndex((16, 16))
+               i == CartesianIndex((16, 1)) ||
+               i == CartesianIndex((1, 16)) ||
+               i == CartesianIndex((16, 16))
                 @test v == 25
             else
                 @test v == 0
@@ -132,11 +128,7 @@ function test_parameterized_hist(
 
             fh_counts = counts(h)
             sb_counts =
-                StatsBase.fit(
-                    StatsBase.Histogram,
-                    vec(img1),
-                    0x00:UInt8(64):0x10f,
-                ).weights
+                StatsBase.fit(StatsBase.Histogram, vec(img1), 0x00:UInt8(64):0x10f).weights
 
             @test fh_counts == sb_counts
         end
@@ -261,9 +253,11 @@ invalid_combination(::BinType, ::BinarySearch, ::SIMD) = true
     search_algorithms = [Arithmetic(), BinarySearch()]
     parallelizations = [NoParallelization(), SIMD()]
 
-    @testset "histogram computations BinType=$(bin_type)" for bin_type = bin_types
-        @testset "BinSearchAlgorithm=$(search_algorithm)" for search_algorithm = search_algorithms
-            @testset "HistogramParallelization=$(parallelization)" for parallelization = parallelizations
+    @testset "histogram computations BinType=$(bin_type)" for bin_type in bin_types
+        @testset "BinSearchAlgorithm=$(search_algorithm)" for search_algorithm in
+            search_algorithms
+            @testset "HistogramParallelization=$(parallelization)" for parallelization in
+                parallelizations
                 if invalid_combination(bin_type, search_algorithm, parallelization)
                     break
                 end

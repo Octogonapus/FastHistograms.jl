@@ -36,10 +36,11 @@ function create_fast_histogram(
     weights = create_weights(Dims, nbins)
     subweights = create_subweights(Dims, nbins)
 
-    if BinEltype <: Integer
-        bin_ranges = ceil.(BinEltype, range(first_bin; stop=last_bin, length=nbins+1))
+    tmp_range = range(first_bin; stop = last_bin, length = nbins + 1)
+    bin_ranges = if BinEltype <: Integer
+        ceil.(BinEltype, tmp_range)
     else
-        bin_ranges = collect(BinEltype, range(first_bin; stop=last_bin, length=nbins+1))
+        collect(BinEltype, tmp_range)
     end
 
     FixedWidthHistogram{dims_number(Dims),BinEltype,B,P}(
@@ -68,7 +69,8 @@ norm(h::FixedWidthHistogram) = h.norm
 bin_ranges(h::FixedWidthHistogram) = h.bin_ranges
 
 @propagate_inbounds increment_weight!(h::FixedWidthHistogram, is...) = h.weights[is...] += 1
-@propagate_inbounds increment_subweight!(h::FixedWidthHistogram, is...) = h.subweights[is...] += 1
+@propagate_inbounds increment_subweight!(h::FixedWidthHistogram, is...) =
+    h.subweights[is...] += 1
 
 sum_subweights!(h::FixedWidthHistogram) = sum!(h.weights, h.subweights)
 

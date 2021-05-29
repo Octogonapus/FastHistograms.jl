@@ -4,14 +4,16 @@
 
 Increments the bin counts for a 1D histogram `h` using the `data`.
 """
-increment_bins!(h, data) = increment_bins!(BinSearchAlgorithm(h), HistogramParallelization(h), h, data)
+increment_bins!(h, data) =
+    increment_bins!(BinSearchAlgorithm(h), HistogramParallelization(h), h, data)
 
 """
     increment_bins!(h, data1, data2)
 
 Increments the bin counts for a 2D histogram `h` using the data `data1` and `data2`.
 """
-increment_bins!(h, data1, data2) = increment_bins!(BinSearchAlgorithm(h), HistogramParallelization(h), h, data1, data2)
+increment_bins!(h, data1, data2) =
+    increment_bins!(BinSearchAlgorithm(h), HistogramParallelization(h), h, data1, data2)
 
 """
     increment_weight!(h, is...)
@@ -27,7 +29,8 @@ increment_weight!(h, is...) = error("increment_weight! not implemented for $(typ
 Increments the bin count at the index `is`. All histograms implementing SIMD parallelization must implement this.
 The implementation should use `@propagate_inbounds` for good performance.
 """
-increment_subweight!(h, is...) = error("increment_subweight! not implemented for $(typeof(h))")
+increment_subweight!(h, is...) =
+    error("increment_subweight! not implemented for $(typeof(h))")
 
 """
     sum_subweights!(h)
