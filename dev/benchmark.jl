@@ -50,9 +50,9 @@ end
 
 bench_df_row(trial) = [time(trial), gctime(trial), allocs(trial), memory(trial)]
 
-function run_all_benchmarks()
-    img1 = rand(UInt8, 40, 80)
-    img2 = rand(UInt8, 40, 80)
+function run_all_benchmarks(img_type, img_size)
+    img1 = rand(img_type, img_size...)
+    img2 = rand(img_type, img_size...)
     tune!.(bench_noparallel(img1, img2))
     results = run.(bench_noparallel(img1, img2))
     df = DataFrame(
@@ -69,6 +69,17 @@ function run_all_benchmarks()
         "FH (SIMD)" => [15000, bench_df_row(results[4])...],
     )
     pretty_table(df)
+end
+
+function run_all_benchmarks()
+    types = [UInt8, Float32]
+    sizes = [(40, 80), (256, 256)]
+    for img_type in types
+        for img_size in sizes
+            println("Benchmarking type=$img_type, size=$img_size")
+            run_all_benchmarks(img_type, img_size)
+        end
+    end
 end
 
 run_all_benchmarks()

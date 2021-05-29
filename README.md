@@ -10,45 +10,89 @@ FastHistograms declares and implements a minimal histogram interface with a focu
 This package does not aim to implement general histogram algorithms that work for a wide array of data types; for that
 purpose, consider [StatsBase](https://github.com/JuliaStats/StatsBase.jl).
 
-Currently, the only implemented algorithm is for fixed-width bins on (small) 2D data.
-
 ## Example
 
 ```julia
-using FastHistograms, Random
+julia> using FastHistograms, Random
 
-julia> h = FixedWidthHistogram()
+# Create a 2D histogram for 8-bit integer data.
+# Use fixed-width bins with an optimized bin search algorithm (Arithmetic) for fixed-width bins.
+# Don't use any parallelization because our data are small.
+julia> h = create_fast_histogram(
+    FastHistograms.FixedWidth(),
+    FastHistograms.Arithmetic(),
+    FastHistograms.NoParallelization(),
+    Val{2}(), # 2D histogram
+    0x00,     # Lowest bucket edge
+    0xff,     # Highest bucket edge
+    4,        # Number of buckets
+);
 
-julia> img1 = zeros(10, 10)
-julia> img1[:, 6:end] .= 0xff
+# Create two random images to compute the joint histogram for
+julia> img1 = rand(0x00:0xff, 32, 32);
 
-julia> img2 = zeros(10, 10)
-julia> img2[6:end, :] .= 0xff
+julia> img2 = rand(0x00:0xff, 32, 32);
 
 # Compute the histogram bin counts
-julia> calc_hist!(h, img1, img2)
+julia> increment_bins!(h, img1, img2)
 
-julia> @show counts(h) # Get the bin counts
-
-16×16 Matrix{Int64}:
- 25  0  0  0  0  0  0  0  0  0  0  0  0  0  0  25
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
- 25  0  0  0  0  0  0  0  0  0  0  0  0  0  0  25
+# Get the bin counts
+julia> counts(h)
+4×4 Matrix{Int64}:
+ 61  64  67  64
+ 65  59  72  65
+ 61  66  71  61
+ 53  67  63  65
 ```
 
 ## Benchmarks
 
-With two 40x80 8-bit images and 16 bins per dimension, FastHistograms runs in 12 μs and StatsBase runs in 194 μs.
+These benchmarks were run on a not-exactly-benchmark-ready system, so read them with a grain of salt.
+The CPU is an i9-9900K. Processor shielding was not used. Swap was enabled. ASLR was enabled.
+CPU frequency scaling and boosting were enabled. Hyperthreading was enabled. The effect of IRQs on benchmark results
+have not been investigated. The CPU used does not have AVX512, so SIMD results are not relevant.
+
+I hope to improve the quality of these benchmarks in the future.
+
+```text
+Benchmarking type=UInt8, size=(40, 80)
+┌────────────────────┬───────────┬─────────────────┬─────────────────────┬───────────┐
+│               Rows │ StatsBase │ FH (NoParallel) │ FH (NoParallel, BS) │ FH (SIMD) │
+│             String │   Float64 │         Float64 │             Float64 │   Float64 │
+├────────────────────┼───────────┼─────────────────┼─────────────────────┼───────────┤
+│      Min Time (ns) │   32627.0 │         13031.0 │             13315.0 │   14679.0 │
+│       GC Time (ns) │       0.0 │             0.0 │                 0.0 │       0.0 │
+│         Allocs (B) │       2.0 │             0.0 │                 0.0 │       0.0 │
+│         Memory (B) │    2224.0 │             0.0 │                 0.0 │       0.0 │
+└────────────────────┴───────────┴─────────────────┴─────────────────────┴───────────┘
+Benchmarking type=UInt8, size=(256, 256)
+┌────────────────────┬───────────┬─────────────────┬─────────────────────┬───────────┐
+│               Rows │ StatsBase │ FH (NoParallel) │ FH (NoParallel, BS) │ FH (SIMD) │
+│             String │   Float64 │         Float64 │             Float64 │   Float64 │
+├────────────────────┼───────────┼─────────────────┼─────────────────────┼───────────┤
+│      Min Time (ns) │  671187.0 │        256721.0 │            256691.0 │  289822.0 │
+│       GC Time (ns) │       0.0 │             0.0 │                 0.0 │       0.0 │
+│         Allocs (B) │       2.0 │             0.0 │                 0.0 │       0.0 │
+│         Memory (B) │    2224.0 │             0.0 │                 0.0 │       0.0 │
+└────────────────────┴───────────┴─────────────────┴─────────────────────┴───────────┘
+Benchmarking type=Float32, size=(40, 80)
+┌────────────────────┬───────────┬─────────────────┬─────────────────────┬───────────┐
+│               Rows │ StatsBase │ FH (NoParallel) │ FH (NoParallel, BS) │ FH (SIMD) │
+│             String │   Float64 │         Float64 │             Float64 │   Float64 │
+├────────────────────┼───────────┼─────────────────┼─────────────────────┼───────────┤
+│      Min Time (ns) │   51020.0 │         10815.0 │             10818.0 │   14021.0 │
+│       GC Time (ns) │       0.0 │             0.0 │                 0.0 │       0.0 │
+│         Allocs (B) │       2.0 │             0.0 │                 0.0 │       0.0 │
+│         Memory (B) │    2224.0 │             0.0 │                 0.0 │       0.0 │
+└────────────────────┴───────────┴─────────────────┴─────────────────────┴───────────┘
+Benchmarking type=Float32, size=(256, 256)
+┌────────────────────┬───────────┬─────────────────┬─────────────────────┬───────────┐
+│               Rows │ StatsBase │ FH (NoParallel) │ FH (NoParallel, BS) │ FH (SIMD) │
+│             String │   Float64 │         Float64 │             Float64 │   Float64 │
+├────────────────────┼───────────┼─────────────────┼─────────────────────┼───────────┤
+│      Min Time (ns) │ 1.05138e6 │        214891.0 │            214821.0 │  271832.0 │
+│       GC Time (ns) │       0.0 │             0.0 │                 0.0 │       0.0 │
+│         Allocs (B) │       2.0 │             0.0 │                 0.0 │       0.0 │
+│         Memory (B) │    2224.0 │             0.0 │                 0.0 │       0.0 │
+└────────────────────┴───────────┴─────────────────┴─────────────────────┴───────────┘
+```
