@@ -11,9 +11,24 @@ include("fixed_width_histogram.jl")
 
 export create_fast_histogram, bin_search, increment_bins!, counts, zero!
 
-function create_fast_histogram end
-function bin_search end
-function increment_bins! end
+"""
+    create_fast_histogram(
+        ::BinType,
+        ::BinSearchAlgorithm,
+        ::HistogramParallelization,
+        args...
+    )
+
+Creates a histogram with the given `BinType`, `BinSearchAlgorithm`, and `HistogramParallelization` traits.
+Methods of this function will also require additional arguments (here `args...`) that depend on the combination of
+traits selected.
+"""
+create_fast_histogram(
+    ::BinType,
+    ::BinSearchAlgorithm,
+    ::HistogramParallelization,
+    args...
+) = error("Not implemented.")
 
 """
     counts(hist)

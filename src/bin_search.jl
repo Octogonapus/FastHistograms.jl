@@ -14,6 +14,11 @@ struct BinarySearch <: BinSearchAlgorithm end
 
 BinSearchAlgorithm(::Type) = error("")
 
+"""
+    bin_search(h, data)
+
+Returns the index of the bin to increment.
+"""
 bin_search(h, data) = bin_search(BinSearchAlgorithm(h), h, data)
 
 function bin_search(::Arithmetic, h, data)

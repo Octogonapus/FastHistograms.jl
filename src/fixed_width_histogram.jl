@@ -36,11 +36,16 @@ function create_fast_histogram(
     weights = create_weights(Dims, nbins)
     subweights = create_subweights(Dims, nbins)
 
-    tmp_range = range(first_bin; stop = last_bin, length = nbins + 1)
-    bin_ranges = if BinEltype <: Integer
-        ceil.(BinEltype, tmp_range)
+    if B isa Arithmetic
+        # Arithmetic does not need `bin_ranges(h)` so don't bother computing them
+        bin_ranges = []
     else
-        collect(BinEltype, tmp_range)
+        tmp_range = range(first_bin; stop = last_bin, length = nbins + 1)
+        bin_ranges = if BinEltype <: Integer
+            ceil.(BinEltype, tmp_range)
+        else
+            collect(BinEltype, tmp_range)
+        end
     end
 
     FixedWidthHistogram{dims_number(Dims),BinEltype,B,P}(
@@ -60,20 +65,22 @@ create_subweights(::Type{Val{2}}, nbins) = zeros(Int, nbins, nbins, 4)
 dims_number(::Type{Val{1}}) = 1
 dims_number(::Type{Val{2}}) = 2
 
-# For BinSearchAlgorithm Arithmetic
+# For Arithmetic
 nbins(h::FixedWidthHistogram) = h.nbins
 binmin(h::FixedWidthHistogram) = h.binmin
 norm(h::FixedWidthHistogram) = h.norm
 
-# For BinSearchAlgorithm BinarySearch
+# For BinarySearch
 bin_ranges(h::FixedWidthHistogram) = h.bin_ranges
 
 @propagate_inbounds increment_weight!(h::FixedWidthHistogram, is...) = h.weights[is...] += 1
+
+# For SIMD
 @propagate_inbounds increment_subweight!(h::FixedWidthHistogram, is...) =
     h.subweights[is...] += 1
-
 sum_subweights!(h::FixedWidthHistogram) = sum!(h.weights, h.subweights)
 
+# TODO: Move to bin_update.jl once LoopVectorization issues are sorted out
 function increment_bins!(
     ::Arithmetic,
     ::SIMD,
@@ -107,6 +114,7 @@ function increment_bins!(
     nothing
 end
 
+# TODO: Move to bin_update.jl once LoopVectorization issues are sorted out
 function increment_bins!(
     ::Arithmetic,
     ::SIMD,
