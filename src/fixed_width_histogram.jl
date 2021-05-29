@@ -1,9 +1,4 @@
-@computed struct FixedWidthHistogram{
-    N,
-    BinEltype<:Real,
-    B<:BinSearchAlgorithm,
-    P<:HistogramParallelization,
-}
+@computed struct FixedWidthHistogram{N,BinEltype<:Real,B<:BinSearchAlgorithm,P<:HistogramParallelization}
     weights::Array{Int,N}
     subweights::Array{Int,N + 1}
     norm::Float32
@@ -61,14 +56,7 @@ function create_fast_histogram(
         end
     end
 
-    FixedWidthHistogram{dims_number(Dims),BinEltype,B,P}(
-        weights,
-        subweights,
-        norm,
-        nbins,
-        first_bin,
-        bin_ranges,
-    )
+    FixedWidthHistogram{dims_number(Dims),BinEltype,B,P}(weights, subweights, norm, nbins, first_bin, bin_ranges)
 end
 
 create_weights(::Type{Val{1}}, nbins) = zeros(Int, nbins)
@@ -89,17 +77,11 @@ bin_ranges(h::FixedWidthHistogram) = h.bin_ranges
 @propagate_inbounds increment_weight!(h::FixedWidthHistogram, is...) = h.weights[is...] += 1
 
 # For SIMD
-@propagate_inbounds increment_subweight!(h::FixedWidthHistogram, is...) =
-    h.subweights[is...] += 1
+@propagate_inbounds increment_subweight!(h::FixedWidthHistogram, is...) = h.subweights[is...] += 1
 sum_subweights!(h::FixedWidthHistogram) = sum!(h.weights, h.subweights)
 
 # TODO: Move to bin_update.jl once LoopVectorization issues are sorted out
-function increment_bins!(
-    ::Arithmetic,
-    ::SIMD,
-    h::FixedWidthHistogram,
-    data::Union{AbstractVector,AbstractMatrix},
-)
+function increment_bins!(::Arithmetic, ::SIMD, h::FixedWidthHistogram, data::Union{AbstractVector,AbstractMatrix})
     rows = size(data, 1)
     align_rows = floor(Int, rows / 3)
 

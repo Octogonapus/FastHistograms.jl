@@ -23,12 +23,7 @@ Creates a histogram with the given `BinType`, `BinSearchAlgorithm`, and `Histogr
 Methods of this function will also require additional arguments (here `args...`) that depend on the combination of
 traits selected.
 """
-create_fast_histogram(
-    ::BinType,
-    ::BinSearchAlgorithm,
-    ::HistogramParallelization,
-    args...,
-) = error("Not implemented.")
+create_fast_histogram(::BinType, ::BinSearchAlgorithm, ::HistogramParallelization, args...) = error("Not implemented.")
 
 """
     counts(hist)

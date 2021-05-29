@@ -9,15 +9,7 @@ using BenchmarkTools
 
 function test_parameterized_hist(bin_type, search_algorithm, parallelization)
     @testset "2D 16x16 corners" begin
-        h = create_fast_histogram(
-            bin_type,
-            search_algorithm,
-            parallelization,
-            Val{2}(),
-            0x00,
-            0xff,
-            16,
-        )
+        h = create_fast_histogram(bin_type, search_algorithm, parallelization, Val{2}(), 0x00, 0xff, 16)
 
         # Sanity check traits
         @test BinType(h) == bin_type
@@ -56,15 +48,7 @@ function test_parameterized_hist(bin_type, search_algorithm, parallelization)
     end
 
     @testset "2D 4x4" begin
-        h = create_fast_histogram(
-            bin_type,
-            search_algorithm,
-            parallelization,
-            Val{2}(),
-            0x00,
-            0xff,
-            4,
-        )
+        h = create_fast_histogram(bin_type, search_algorithm, parallelization, Val{2}(), 0x00, 0xff, 4)
         @test counts(h) == zeros(4, 4)
 
         img1 = [
@@ -108,15 +92,7 @@ function test_parameterized_hist(bin_type, search_algorithm, parallelization)
                 0x40 0x00
             ]
 
-            h = create_fast_histogram(
-                bin_type,
-                search_algorithm,
-                parallelization,
-                Val{2}(),
-                0x00,
-                0xff,
-                4,
-            )
+            h = create_fast_histogram(bin_type, search_algorithm, parallelization, Val{2}(), 0x00, 0xff, 4)
 
             increment_bins!(h, img1, img2)
 
@@ -135,21 +111,12 @@ function test_parameterized_hist(bin_type, search_algorithm, parallelization)
             img1 = [0x00, 0x40, 0x80, 0xc0]
             img2 = [0x00, 0x00, 0x40, 0x00]
 
-            h = create_fast_histogram(
-                bin_type,
-                search_algorithm,
-                parallelization,
-                Val{1}(),
-                0x00,
-                0xff,
-                4,
-            )
+            h = create_fast_histogram(bin_type, search_algorithm, parallelization, Val{1}(), 0x00, 0xff, 4)
 
             increment_bins!(h, img1)
 
             fh_counts = counts(h)
-            sb_counts =
-                StatsBase.fit(StatsBase.Histogram, vec(img1), 0x00:UInt8(64):0x10f).weights
+            sb_counts = StatsBase.fit(StatsBase.Histogram, vec(img1), 0x00:UInt8(64):0x10f).weights
 
             @test fh_counts == sb_counts
         end
@@ -160,15 +127,7 @@ function test_parameterized_hist(bin_type, search_algorithm, parallelization)
                 img1 = rand(0x00:0xff, img_size...)
                 img2 = rand(0x00:0xff, img_size...)
 
-                h = create_fast_histogram(
-                    bin_type,
-                    search_algorithm,
-                    parallelization,
-                    Val{2}(),
-                    0x00,
-                    0xff,
-                    16,
-                )
+                h = create_fast_histogram(bin_type, search_algorithm, parallelization, Val{2}(), 0x00, 0xff, 16)
 
                 increment_bins!(h, img1, img2)
 
@@ -275,10 +234,8 @@ invalid_combination(::BinType, ::BinarySearch, ::SIMD) = true
     parallelizations = [NoParallelization(), SIMD()]
 
     @testset "histogram computations BinType=$(bin_type)" for bin_type in bin_types
-        @testset "BinSearchAlgorithm=$(search_algorithm)" for search_algorithm in
-                                                              search_algorithms
-            @testset "HistogramParallelization=$(parallelization)" for parallelization in
-                                                                       parallelizations
+        @testset "BinSearchAlgorithm=$(search_algorithm)" for search_algorithm in search_algorithms
+            @testset "HistogramParallelization=$(parallelization)" for parallelization in parallelizations
                 if invalid_combination(bin_type, search_algorithm, parallelization)
                     break
                 end
@@ -289,15 +246,7 @@ invalid_combination(::BinType, ::BinarySearch, ::SIMD) = true
     end
 
     @testset "zero bins" begin
-        h = create_fast_histogram(
-            FixedWidth(),
-            Arithmetic(),
-            NoParallelization(),
-            Val{2}(),
-            0x00,
-            0xff,
-            16,
-        )
+        h = create_fast_histogram(FixedWidth(), Arithmetic(), NoParallelization(), Val{2}(), 0x00, 0xff, 16)
 
         increment_bins!(h, rand(UInt8, 10, 10), rand(UInt8, 10, 10))
 
@@ -308,29 +257,13 @@ invalid_combination(::BinType, ::BinarySearch, ::SIMD) = true
     end
 
     @testset "default hist bin type" begin
-        h = create_fast_histogram(
-            FixedWidth(),
-            Arithmetic(),
-            NoParallelization(),
-            Val{2}(),
-            0x00,
-            0xff,
-            16,
-        )
+        h = create_fast_histogram(FixedWidth(), Arithmetic(), NoParallelization(), Val{2}(), 0x00, 0xff, 16)
 
         @test eltype(h) == UInt8
     end
 
     @testset "custom hist bin type" begin
-        h = create_fast_histogram(
-            FixedWidth(),
-            Arithmetic(),
-            NoParallelization(),
-            Val{2}(),
-            Int32(0),
-            Int32(16),
-            16,
-        )
+        h = create_fast_histogram(FixedWidth(), Arithmetic(), NoParallelization(), Val{2}(), Int32(0), Int32(16), 16)
 
         @test eltype(h) == Int32
     end

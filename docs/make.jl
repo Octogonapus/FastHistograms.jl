@@ -1,12 +1,7 @@
 using FastHistograms
 using Documenter
 
-DocMeta.setdocmeta!(
-    FastHistograms,
-    :DocTestSetup,
-    :(using FastHistograms);
-    recursive = true,
-)
+DocMeta.setdocmeta!(FastHistograms, :DocTestSetup, :(using FastHistograms); recursive = true)
 
 makedocs(;
     modules = [FastHistograms],
