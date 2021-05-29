@@ -51,39 +51,37 @@ function zero! end
 """
 FastHistograms declares and implements a minimal histogram interface with a focus on speed.
 
-```julia
-using FastHistograms, Random
+```julia-repl
+julia> using FastHistograms, Random
 
-h = FixedWidthHistogram()
+# Create a 2D histogram for 8-bit integer data.
+# Use fixed-width bins with an optimized bin search algorithm (Arithmetic) for fixed-width bins.
+# Don't use any parallelization because our data are small.
+julia> h = create_fast_histogram(
+    FastHistograms.FixedWidth(),
+    FastHistograms.Arithmetic(),
+    FastHistograms.NoParallelization(),
+    Val{2}(), # 2D histogram
+    0x00,     # Lowest bucket edge
+    0xff,     # Highest bucket edge
+    4,        # Number of buckets
+);
 
-img1 = zeros(10, 10)
-img1[:, 6:end] .= 0xff
+# Create two random images to compute the joint histogram for
+julia> img1 = rand(0x00:0xff, 32, 32);
 
-img2 = zeros(10, 10)
-img2[6:end, :] .= 0xff
+julia> img2 = rand(0x00:0xff, 32, 32);
 
 # Compute the histogram bin counts
-calc_hist!(h, img1, img2)
+julia> increment_bins!(h, img1, img2)
 
-@show counts(h) # Get the bin counts
-
-16×16 Matrix{Int64}:
- 25  0  0  0  0  0  0  0  0  0  0  0  0  0  0  25
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
- 25  0  0  0  0  0  0  0  0  0  0  0  0  0  0  25
+# Get the bin counts
+julia> counts(h)
+4×4 Matrix{Int64}:
+ 61  64  67  64
+ 65  59  72  65
+ 61  66  71  61
+ 53  67  63  65
 ```
 """
 FastHistograms

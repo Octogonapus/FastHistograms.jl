@@ -36,7 +36,7 @@ function create_fast_histogram(
     weights = create_weights(Dims, nbins)
     subweights = create_subweights(Dims, nbins)
 
-    if B isa Arithmetic
+    if B <: Arithmetic
         # Arithmetic does not need `bin_ranges(h)` so don't bother computing them
         bin_ranges = []
     else
