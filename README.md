@@ -17,7 +17,7 @@ Currently, the only implemented algorithm is for fixed-width bins on (small) 2D 
 ```julia
 using FastHistograms, Random
 
-julia> h = SingleThreadFixedWidth2DHistogram()
+julia> h = FixedWidthHistogram()
 
 julia> img1 = zeros(10, 10)
 julia> img1[:, 6:end] .= 0xff

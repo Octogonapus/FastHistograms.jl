@@ -1,4 +1,4 @@
-@computed struct SingleThreadFixedWidth2DHistogram{
+@computed struct FixedWidthHistogram{
     N,
     BinEltype<:Real,
     B<:BinSearchAlgorithm,
@@ -12,11 +12,11 @@
     bin_ranges::Vector{BinEltype}
 end
 
-BinType(::SingleThreadFixedWidth2DHistogram) = FixedWidth()
-BinSearchAlgorithm(::SingleThreadFixedWidth2DHistogram{N,E,B,P}) where {N,E,B,P} = B()
-HistogramParallelization(::SingleThreadFixedWidth2DHistogram{N,E,B,P}) where {N,E,B,P} = P()
+BinType(::FixedWidthHistogram) = FixedWidth()
+BinSearchAlgorithm(::FixedWidthHistogram{N,E,B,P}) where {N,E,B,P} = B()
+HistogramParallelization(::FixedWidthHistogram{N,E,B,P}) where {N,E,B,P} = P()
 
-eltype(::SingleThreadFixedWidth2DHistogram{N,E,B,P}) where {N,E,B,P} = E
+eltype(::FixedWidthHistogram{N,E,B,P}) where {N,E,B,P} = E
 
 """
 Creates a histogram for fixed-width bins. The `first_bin` and `last_bin` are the values of the lowest
@@ -42,7 +42,7 @@ function create_fast_histogram(
         bin_ranges = collect(BinEltype, range(first_bin; stop=last_bin, length=nbins+1))
     end
 
-    SingleThreadFixedWidth2DHistogram{dims_number(Dims),BinEltype,B,P}(
+    FixedWidthHistogram{dims_number(Dims),BinEltype,B,P}(
         weights,
         subweights,
         norm,
@@ -60,22 +60,22 @@ dims_number(::Type{Val{1}}) = 1
 dims_number(::Type{Val{2}}) = 2
 
 # For BinSearchAlgorithm Arithmetic
-nbins(h::SingleThreadFixedWidth2DHistogram) = h.nbins
-binmin(h::SingleThreadFixedWidth2DHistogram) = h.binmin
-norm(h::SingleThreadFixedWidth2DHistogram) = h.norm
+nbins(h::FixedWidthHistogram) = h.nbins
+binmin(h::FixedWidthHistogram) = h.binmin
+norm(h::FixedWidthHistogram) = h.norm
 
 # For BinSearchAlgorithm BinarySearch
-bin_ranges(h::SingleThreadFixedWidth2DHistogram) = h.bin_ranges
+bin_ranges(h::FixedWidthHistogram) = h.bin_ranges
 
-@propagate_inbounds increment_weight!(h::SingleThreadFixedWidth2DHistogram, is...) = h.weights[is...] += 1
-@propagate_inbounds increment_subweight!(h::SingleThreadFixedWidth2DHistogram, is...) = h.subweights[is...] += 1
+@propagate_inbounds increment_weight!(h::FixedWidthHistogram, is...) = h.weights[is...] += 1
+@propagate_inbounds increment_subweight!(h::FixedWidthHistogram, is...) = h.subweights[is...] += 1
 
-sum_subweights!(h::SingleThreadFixedWidth2DHistogram) = sum!(h.weights, h.subweights)
+sum_subweights!(h::FixedWidthHistogram) = sum!(h.weights, h.subweights)
 
 function bin_update!(
     ::Arithmetic,
     ::SIMD,
-    h::SingleThreadFixedWidth2DHistogram,
+    h::FixedWidthHistogram,
     data::Union{AbstractVector,AbstractMatrix},
 )
     rows = size(data, 1)
@@ -88,7 +88,7 @@ function bin_update!(
             @turbo for i = 0:2
                 @inbounds tx = data[r+i, c]
                 @inbounds h.subweights[bin_search(h, tx), i+1] += 1
-                # @inbounds increment_subweight!(h, bin_search(h, tx), i+1)
+                # TODO: Figure out how to use @inbounds increment_subweight!(h, bin_search(h, tx), i+1)
             end
             r += 3
         end
@@ -96,7 +96,7 @@ function bin_update!(
         for r2 = r:rows
             @inbounds tx = data[r2, c]
             @inbounds h.subweights[bin_search(h, tx), 1] += 1
-            # @inbounds increment_subweight!(h, bin_search(h, tx), 1)
+            # TODO: Figure out how to use @inbounds increment_subweight!(h, bin_search(h, tx), 1)
         end
     end
 
@@ -108,7 +108,7 @@ end
 function bin_update!(
     ::Arithmetic,
     ::SIMD,
-    h::SingleThreadFixedWidth2DHistogram,
+    h::FixedWidthHistogram,
     img1::Union{AbstractVector,AbstractMatrix},
     img2::Union{AbstractVector,AbstractMatrix},
 )
@@ -125,7 +125,7 @@ function bin_update!(
                 ix = bin_search(h, tx)
                 iy = bin_search(h, ty)
                 @inbounds h.subweights[ix, iy, i+1] += 1
-                # @inbounds increment_subweight!(h, ix, iy, i+1)
+                # TODO: Figure out how to use @inbounds increment_subweight!(h, ix, iy, i+1)
             end
             r += 4
         end
@@ -136,7 +136,7 @@ function bin_update!(
             ix = bin_search(h, tx)
             iy = bin_search(h, ty)
             @inbounds h.subweights[ix, iy, 1] += 1
-            #@inbounds increment_subweight!(h, ix, iy, 1)
+            # TODO: Figure out how to use @inbounds increment_subweight!(h, ix, iy, 1)
         end
     end
 
@@ -145,9 +145,9 @@ function bin_update!(
     nothing
 end
 
-counts(h::SingleThreadFixedWidth2DHistogram) = h.weights
+counts(h::FixedWidthHistogram) = h.weights
 
-function zero!(h::SingleThreadFixedWidth2DHistogram)
+function zero!(h::FixedWidthHistogram)
     h.weights .= 0
     h.subweights .= 0
 end

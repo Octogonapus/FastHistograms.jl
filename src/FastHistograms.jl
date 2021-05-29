@@ -40,7 +40,7 @@ FastHistograms declares and implements a minimal histogram interface with a focu
 ```julia
 using FastHistograms, Random
 
-h = SingleThreadFixedWidth2DHistogram()
+h = FixedWidthHistogram()
 
 img1 = zeros(10, 10)
 img1[:, 6:end] .= 0xff
