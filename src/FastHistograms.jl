@@ -3,6 +3,7 @@ module FastHistograms
 import Base: eltype, @propagate_inbounds
 using ComputedFieldTypes
 using LoopVectorization
+using StaticArrays
 
 include("traits.jl")
 include("bin_search.jl")
@@ -23,7 +24,7 @@ Creates a histogram with the given `BinType`, `BinSearchAlgorithm`, and `Histogr
 Methods of this function will also require additional arguments (here `args...`) that depend on the combination of
 traits selected.
 """
-create_fast_histogram(::BinType, ::BinSearchAlgorithm, ::HistogramParallelization, args...) = error("Not implemented.")
+create_fast_histogram
 
 """
     counts(hist)
@@ -32,7 +33,7 @@ Returns the count in each bin of the histogram. This function takes one argument
 
 This function is not required to be thread-safe.
 """
-function counts end
+counts
 
 """
     zero!(hist)
@@ -41,7 +42,7 @@ Sets the count in each bin to zero. This function takes one argument: the histog
 
 This function is not required to be thread-safe.
 """
-function zero! end
+zero!
 
 """
 FastHistograms declares and implements a minimal histogram interface with a focus on speed.

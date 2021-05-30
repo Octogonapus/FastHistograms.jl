@@ -5,10 +5,7 @@ function bench_noparallel(img1, img2)
         FastHistograms.FixedWidth(),
         FastHistograms.Arithmetic(),
         FastHistograms.NoParallelization(),
-        Val{2}(),
-        0x00,
-        0xff,
-        16,
+        [(0x00, 0xff, 16), (0x00, 0xff, 16)],
     )
     hist_bench_noparallel = @benchmarkable increment_bins!($h_noparallel, $img1, $img2)
 
@@ -16,10 +13,7 @@ function bench_noparallel(img1, img2)
         FastHistograms.FixedWidth(),
         FastHistograms.BinarySearch(),
         FastHistograms.NoParallelization(),
-        Val{2}(),
-        0x00,
-        0xff,
-        16,
+        [(0x00, 0xff, 16), (0x00, 0xff, 16)],
     )
     hist_bench_noparallel_bs = @benchmarkable increment_bins!($h_noparallel, $img1, $img2)
 
@@ -27,10 +21,7 @@ function bench_noparallel(img1, img2)
         FastHistograms.FixedWidth(),
         FastHistograms.Arithmetic(),
         FastHistograms.SIMD(),
-        Val{2}(),
-        0x00,
-        0xff,
-        16,
+        [(0x00, 0xff, 16), (0x00, 0xff, 16)],
     )
     hist_bench_simd = @benchmarkable increment_bins!($h_simd, $img1, $img2)
 
