@@ -64,15 +64,6 @@ invalid_combination(::Union{VariableWidth,UnboundedWidth}, ::Arithmetic, ::Histo
         @test eltype(h) == Int32
     end
 
-    @testset "partition_data_to_threads" begin
-        @test FastHistograms.partition_data_to_threads(1:1, 3) == [1:1]
-        @test FastHistograms.partition_data_to_threads(1:5, 3) == [1:1, 2:5]
-        @test FastHistograms.partition_data_to_threads(1:30, 3) == [1:10, 11:20, 21:30]
-        @test FastHistograms.partition_data_to_threads(1:31, 3) == [1:10, 11:20, 21:31]
-        @test FastHistograms.partition_data_to_threads(1:32, 3) == [1:10, 11:20, 21:32]
-        @test FastHistograms.partition_data_to_threads(1:33, 3) == [1:11, 12:22, 23:33]
-    end
-
     @testset "AHTL fixed data" begin
         # Generate the data in the same way the AHTL test does
         data = rand(Float32, 100000000) .* (512 - Float32(0.01))

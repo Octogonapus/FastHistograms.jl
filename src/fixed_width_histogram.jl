@@ -262,19 +262,6 @@ function increment_bins!(
     nothing
 end
 
-function partition_data_to_threads(data, nthreads)
-    thread_data = Vector()
-    step = length(data) ÷ nthreads
-    remainder = length(data) % nthreads
-    i = 1
-    while i + step < length(data) - remainder
-        push!(thread_data, view(data, i:i+step-1))
-        i += step
-    end
-    push!(thread_data, view(data, i:length(data)))
-    return thread_data
-end
-
 counts(h::FastHistogram) = h.weights
 
 function zero!(h::FastHistogram)
