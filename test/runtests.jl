@@ -28,7 +28,7 @@ invalid_combination(::Union{VariableWidth,UnboundedWidth}, ::Arithmetic, ::Histo
         @testset "BinSearchAlgorithm=$(search_algorithm)" for search_algorithm in search_algorithms
             @testset "HistogramParallelization=$(parallelization)" for parallelization in parallelizations
                 if invalid_combination(bin_type, search_algorithm, parallelization)
-                    break
+                    continue
                 end
 
                 test_parameterized_hist(bin_type, search_algorithm, parallelization)
@@ -71,5 +71,27 @@ invalid_combination(::Union{VariableWidth,UnboundedWidth}, ::Arithmetic, ::Histo
         @test FastHistograms.partition_data_to_threads(1:31, 3) == [1:10, 11:20, 21:31]
         @test FastHistograms.partition_data_to_threads(1:32, 3) == [1:10, 11:20, 21:32]
         @test FastHistograms.partition_data_to_threads(1:33, 3) == [1:11, 12:22, 23:33]
+    end
+
+    @testset "AHTL fixed data" begin
+        # Generate the data in the same way the AHTL test does
+        data = rand(Float32, 100000000) .* (512 - Float32(0.01))
+
+        img_vec = vec(data)
+        sb_counts = StatsBase.fit(
+            StatsBase.Histogram,
+            img_vec,
+            range(Float32(0.0); stop = Float32(512.0), length = 513),
+        ).weights
+
+        h = create_fast_histogram(
+            FastHistograms.FixedWidth(),
+            FastHistograms.Arithmetic(),
+            FastHistograms.PrivateThreads(),
+            [(Float32(0.0), Float32(512.0), 512)],
+        )
+        increment_bins!(h, data)
+        fh_counts = counts(h)
+        @test fh_counts == sb_counts
     end
 end

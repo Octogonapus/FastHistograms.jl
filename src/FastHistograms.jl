@@ -27,24 +27,6 @@ traits selected.
 create_fast_histogram
 
 """
-    counts(hist)
-
-Returns the count in each bin of the histogram. This function takes one argument: the histogram structure.
-
-This function is not required to be thread-safe.
-"""
-counts
-
-"""
-    zero!(hist)
-
-Sets the count in each bin to zero. This function takes one argument: the histogram structure.
-
-This function is not required to be thread-safe.
-"""
-zero!
-
-"""
 FastHistograms declares and implements a minimal histogram interface with a focus on speed.
 
 ```julia-repl
