@@ -1,4 +1,60 @@
 function test_parameterized_hist(bin_type::FixedWidth, search_algorithm, parallelization)
+    if run_1D_tests
+        test_parameterized_hist_1D(bin_type, search_algorithm, parallelization)
+    end
+
+    if run_2D_tests
+        test_parameterized_hist_2D(bin_type, search_algorithm, parallelization)
+    end
+end
+
+function test_parameterized_hist_1D(bin_type::FixedWidth, search_algorithm, parallelization)
+    @testset "regression 1 1x4 and 4x1" begin
+        img1 = [0x00, 0x40, 0x80, 0xc0]
+
+        h = create_fast_histogram(bin_type, search_algorithm, parallelization, [(0x00, 0xff, 4)])
+
+        increment_bins!(h, img1)
+        fh_counts = counts(h)
+        sb_counts = StatsBase.fit(StatsBase.Histogram, vec(img1), 0x00:UInt8(64):0x10f).weights
+        @test fh_counts == sb_counts
+
+        # Also test the transpose of img1
+        zero!(h)
+        increment_bins!(h, transpose(img1))
+        fh_counts = counts(h)
+        sb_counts = StatsBase.fit(StatsBase.Histogram, vec(transpose(img1)), 0x00:UInt8(64):0x10f).weights
+        @test fh_counts == sb_counts
+    end
+
+    @testset "random regressions (1D, Float32)" begin
+        for i = 1:100
+            img_size = rand(2:64, 2)
+            img1 = rand(img_size...)
+
+            h = create_fast_histogram(bin_type, search_algorithm, parallelization, [(Float32(0.0), Float32(1.0), 16)])
+
+            increment_bins!(h, img1)
+
+            fh_counts = counts(h)
+            sb_counts =
+                StatsBase.fit(
+                    StatsBase.Histogram,
+                    vec(img1),
+                    # StatsBase takes the edges (number of bins plus one), so add 1 to the length
+                    range(Float32(0.0); stop = Float32(1.0), length = 17),
+                ).weights
+
+            @test fh_counts == sb_counts
+
+            if fh_counts != sb_counts
+                break
+            end
+        end
+    end
+end
+
+function test_parameterized_hist_2D(bin_type::FixedWidth, search_algorithm, parallelization)
     @testset "2D 16x16 corners" begin
         h = create_fast_histogram(bin_type, search_algorithm, parallelization, [(0x00, 0xff, 16), (0x00, 0xff, 16)])
 
@@ -31,8 +87,8 @@ function test_parameterized_hist(bin_type::FixedWidth, search_algorithm, paralle
         zero!(h)
         @test counts(h) == zeros(16, 16)
 
-        # FixedWidth should be able to run without allocating in all cases
-        if bin_type isa FixedWidth
+        # FixedWidth should be able to run without allocating, except if there is threading
+        if bin_type isa FixedWidth && !(parallelization isa PrivateThreads)
             bench = @benchmarkable increment_bins!($h, $img1, $img2)
             @test allocs(run(bench)) == 0
         end
@@ -94,24 +150,6 @@ function test_parameterized_hist(bin_type::FixedWidth, search_algorithm, paralle
                 (0x00:UInt8(64):0x10f, 0x00:UInt8(64):0x10f),
             ).weights
 
-        @test fh_counts == sb_counts
-    end
-
-    @testset "regression 1 1x4 and 4x1" begin
-        img1 = [0x00, 0x40, 0x80, 0xc0]
-
-        h = create_fast_histogram(bin_type, search_algorithm, parallelization, [(0x00, 0xff, 4)])
-
-        increment_bins!(h, img1)
-        fh_counts = counts(h)
-        sb_counts = StatsBase.fit(StatsBase.Histogram, vec(img1), 0x00:UInt8(64):0x10f).weights
-        @test fh_counts == sb_counts
-
-        # Also test the transpose of img1
-        zero!(h)
-        increment_bins!(h, transpose(img1))
-        fh_counts = counts(h)
-        sb_counts = StatsBase.fit(StatsBase.Histogram, vec(transpose(img1)), 0x00:UInt8(64):0x10f).weights
         @test fh_counts == sb_counts
     end
 
@@ -205,32 +243,6 @@ function test_parameterized_hist(bin_type::FixedWidth, search_algorithm, paralle
                         range(Float32(0.0); stop = Float32(1.0), length = 9),
                         range(Float32(0.0); stop = Float32(1.0), length = 17),
                     ),
-                ).weights
-
-            @test fh_counts == sb_counts
-
-            if fh_counts != sb_counts
-                break
-            end
-        end
-    end
-
-    @testset "random regressions (1D, Float32)" begin
-        for i = 1:100
-            img_size = rand(2:64, 2)
-            img1 = rand(img_size...)
-
-            h = create_fast_histogram(bin_type, search_algorithm, parallelization, [(Float32(0.0), Float32(1.0), 16)])
-
-            increment_bins!(h, img1)
-
-            fh_counts = counts(h)
-            sb_counts =
-                StatsBase.fit(
-                    StatsBase.Histogram,
-                    vec(img1),
-                    # StatsBase takes the edges (number of bins plus one), so add 1 to the length
-                    range(Float32(0.0); stop = Float32(1.0), length = 17),
                 ).weights
 
             @test fh_counts == sb_counts

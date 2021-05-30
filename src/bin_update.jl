@@ -54,13 +54,10 @@ Sets all bin counts of the histogram `h` to zero. All histograms must implement 
 """
 zero!
 
-function increment_bins!(::BinSearchAlgorithm, ::NoParallelization, h, data::Union{AbstractVector,AbstractMatrix})
-    for c = 1:size(data, 2)
-        for r = 1:size(data, 1)
-            @inbounds x = data[r, c]
-            @inbounds i = bin_search(h, 1, x)
-            @inbounds increment_weight!(h, i)
-        end
+function increment_bins!(::BinSearchAlgorithm, ::NoParallelization, h, data)
+    for d in data
+        @inbounds i = bin_search(h, 1, d)
+        @inbounds increment_weight!(h, i)
     end
 
     nothing

@@ -11,8 +11,6 @@ struct UnboundedWidth <: BinType end
 abstract type HistogramParallelization end
 "No threading nor vectorization."
 struct NoParallelization <: HistogramParallelization end
-"Threads that share a common bin data structure and update it atomically."
-struct SharedThreads <: HistogramParallelization end
 "Threads that have private bin data structures that are reduced after their private updates."
 struct PrivateThreads <: HistogramParallelization end
 "SIMD."
