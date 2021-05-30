@@ -230,7 +230,7 @@ function increment_bins!(
     data1::Union{AbstractVector,AbstractMatrix},
     data2::Union{AbstractVector,AbstractMatrix},
 )
-    nthreads = size(h.subweights, 2)
+    nthreads = size(h.subweights, 3)
     Threads.@threads for thread_idx in 1:nthreads
         if length(data1) <= nthreads
             if thread_idx == 1
