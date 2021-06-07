@@ -76,6 +76,8 @@ function increment_bins!(
     nothing
 end
 
+# This implementation is slower than NoParallelization in my benchmarks.
+# TODO: Match performance with https://github.com/pcjung/AHTL
 function increment_bins!(::Arithmetic, ::SIMD, h, data::Union{AbstractVector,AbstractMatrix})
     rows = size(data, 1)
     align_rows = floor(Int, rows / 3)
@@ -103,6 +105,8 @@ function increment_bins!(::Arithmetic, ::SIMD, h, data::Union{AbstractVector,Abs
     nothing
 end
 
+# This implementation is slower than NoParallelization in my benchmarks.
+# TODO: Match performance with https://github.com/pcjung/AHTL
 function increment_bins!(
     ::Arithmetic,
     ::SIMD,
