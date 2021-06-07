@@ -5,16 +5,16 @@ struct Axis{E<:Real}
     bin_edges::Vector{E}
 end
 
-@computed struct FastHistogram{N,B<:BinType,E<:Real,S<:BinSearchAlgorithm,P<:HistogramParallelization}
+@computed struct RealHistogram{N,B<:BinType,E<:Real,S<:BinSearchAlgorithm,P<:HistogramParallelization}
     weights::Array{Int,N}
     subweights::Array{Int,N + 1}
     axes::SVector{N,Axis{E}}
 end
 
-BinType(::FastHistogram{N,B,E,S,P}) where {N,B,E,S,P} = B()
-BinSearchAlgorithm(::FastHistogram{N,B,E,S,P}) where {N,B,E,S,P} = S()
-HistogramParallelization(::FastHistogram{N,B,E,S,P}) where {N,B,E,S,P} = P()
-eltype(::FastHistogram{N,B,E,S,P}) where {N,B,E,S,P} = E
+BinType(::RealHistogram{N,B,E,S,P}) where {N,B,E,S,P} = B()
+BinSearchAlgorithm(::RealHistogram{N,B,E,S,P}) where {N,B,E,S,P} = S()
+HistogramParallelization(::RealHistogram{N,B,E,S,P}) where {N,B,E,S,P} = P()
+eltype(::RealHistogram{N,B,E,S,P}) where {N,B,E,S,P} = E
 
 """
     create_fast_histogram(
@@ -69,7 +69,7 @@ function create_fast_histogram(
         zeros(Int, map(x -> x.nbins, axes)..., 1)
     end
 
-    FastHistogram{length(axes_data),FixedWidth,E,S,P}(weights, subweights, SVector{length(axes)}(axes))
+    RealHistogram{length(axes_data),FixedWidth,E,S,P}(weights, subweights, SVector{length(axes)}(axes))
 end
 
 function create_fast_histogram(
@@ -98,18 +98,18 @@ function create_fast_histogram(
         zeros(Int, map(x -> x.nbins, axes)..., 1)
     end
 
-    FastHistogram{length(axes),VariableWidth,E,BinarySearch,P}(weights, subweights, SVector{length(axes)}(axes))
+    RealHistogram{length(axes),VariableWidth,E,BinarySearch,P}(weights, subweights, SVector{length(axes)}(axes))
 end
 
 # For Arithmetic
-@propagate_inbounds nbins(h::FastHistogram, axis) = h.axes[axis].nbins
-@propagate_inbounds binmin(h::FastHistogram, axis) = h.axes[axis].binmin
-@propagate_inbounds norm(h::FastHistogram, axis) = h.axes[axis].norm
+@propagate_inbounds nbins(h::RealHistogram, axis) = h.axes[axis].nbins
+@propagate_inbounds binmin(h::RealHistogram, axis) = h.axes[axis].binmin
+@propagate_inbounds norm(h::RealHistogram, axis) = h.axes[axis].norm
 
 # For BinarySearch
-@propagate_inbounds bin_edges(h::FastHistogram, axis) = h.axes[axis].bin_edges
+@propagate_inbounds bin_edges(h::RealHistogram, axis) = h.axes[axis].bin_edges
 
-get_weights(h::FastHistogram) = h.weights
+get_weights(h::RealHistogram) = h.weights
 
 # For SIMD
-get_subweights(h::FastHistogram) = h.subweights
+get_subweights(h::RealHistogram) = h.subweights
