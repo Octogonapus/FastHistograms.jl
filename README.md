@@ -47,52 +47,67 @@ julia> counts(h)
 
 ## Benchmarks
 
-These benchmarks were run on a not-exactly-benchmark-ready system, so read them with a grain of salt.
-The CPU is an i9-9900K. Processor shielding was not used. Swap was enabled. ASLR was enabled.
-CPU frequency scaling and boosting were enabled. Hyperthreading was enabled. The effect of IRQs on benchmark results
-have not been investigated. The CPU used does not have AVX512, so SIMD results are not relevant.
-
-I hope to improve the quality of these benchmarks in the future.
+These benchmarks were run on a t3.medium EC2 instance. Processor shielding was not used. ASLR was enabled.
 
 ```text
 Benchmarking type=UInt8, size=(40, 80)
-┌────────────────────┬───────────┬─────────────────┬─────────────────────┬───────────┐
-│               Rows │ StatsBase │ FH (NoParallel) │ FH (NoParallel, BS) │ FH (SIMD) │
-│             String │   Float64 │         Float64 │             Float64 │   Float64 │
-├────────────────────┼───────────┼─────────────────┼─────────────────────┼───────────┤
-│      Min Time (ns) │   32627.0 │         13031.0 │             13315.0 │   14679.0 │
-│       GC Time (ns) │       0.0 │             0.0 │                 0.0 │       0.0 │
-│         Allocs (B) │       2.0 │             0.0 │                 0.0 │       0.0 │
-│         Memory (B) │    2224.0 │             0.0 │                 0.0 │       0.0 │
-└────────────────────┴───────────┴─────────────────┴─────────────────────┴───────────┘
+┌───────────────┬───────────────────┬───────────────────┬─────────────────┬────────────┬───────────────┐
+│               │ FastHistograms:   | FastHistograms:   │ FastHistograms: │ StatsBase: │ StatsBase:    │
+|               | FixedWidth,       | VariableWidth,    | FixedWidth,     | FixedWidth | VariableWidth |
+|               | Arithmetic,       | BinarySearch,     | Arithmetic,     |            |               |
+|               | NoParallelization │ NoParallelization | SIMD            |            |               |
+├───────────────┼───────────────────┼───────────────────┼─────────────────┼────────────┼───────────────┤
+│ Min Time (ns) │           19197.0 │           49013.0 │         19061.0 │    47274.0 │       53584.0 │
+│  GC Time (ns) │               0.0 │               0.0 │             0.0 │        0.0 │           0.0 │
+│    Allocs (B) │               0.0 │               0.0 │             0.0 │        2.0 │           2.0 │
+│    Memory (B) │               0.0 │               0.0 │             0.0 │     2224.0 │         224.0 │
+└───────────────┴───────────────────┴───────────────────┴─────────────────┴────────────┴───────────────┘
 Benchmarking type=UInt8, size=(256, 256)
-┌────────────────────┬───────────┬─────────────────┬─────────────────────┬───────────┐
-│               Rows │ StatsBase │ FH (NoParallel) │ FH (NoParallel, BS) │ FH (SIMD) │
-│             String │   Float64 │         Float64 │             Float64 │   Float64 │
-├────────────────────┼───────────┼─────────────────┼─────────────────────┼───────────┤
-│      Min Time (ns) │  671187.0 │        256721.0 │            256691.0 │  289822.0 │
-│       GC Time (ns) │       0.0 │             0.0 │                 0.0 │       0.0 │
-│         Allocs (B) │       2.0 │             0.0 │                 0.0 │       0.0 │
-│         Memory (B) │    2224.0 │             0.0 │                 0.0 │       0.0 │
-└────────────────────┴───────────┴─────────────────┴─────────────────────┴───────────┘
+┌───────────────┬───────────────────┬───────────────────┬─────────────────┬────────────┬───────────────┐
+│               │ FastHistograms:   | FastHistograms:   │ FastHistograms: │ StatsBase: │ StatsBase:    │
+|               | FixedWidth,       | VariableWidth,    | FixedWidth,     | FixedWidth | VariableWidth |
+|               | Arithmetic,       | BinarySearch,     | Arithmetic,     |            |               |
+|               | NoParallelization │ NoParallelization | SIMD            |            |               |
+├───────────────┼───────────────────┼───────────────────┼─────────────────┼────────────┼───────────────┤
+│ Min Time (ns) │          375058.0 │          987333.0 │        372359.0 │   962661.0 │     1.09619e6 │
+│  GC Time (ns) │               0.0 │               0.0 │             0.0 │        0.0 │           0.0 │
+│    Allocs (B) │               0.0 │               0.0 │             0.0 │        2.0 │           2.0 │
+│    Memory (B) │               0.0 │               0.0 │             0.0 │     2224.0 │         224.0 │
+└───────────────┴───────────────────┴───────────────────┴─────────────────┴────────────┴───────────────┘
 Benchmarking type=Float32, size=(40, 80)
-┌────────────────────┬───────────┬─────────────────┬─────────────────────┬───────────┐
-│               Rows │ StatsBase │ FH (NoParallel) │ FH (NoParallel, BS) │ FH (SIMD) │
-│             String │   Float64 │         Float64 │             Float64 │   Float64 │
-├────────────────────┼───────────┼─────────────────┼─────────────────────┼───────────┤
-│      Min Time (ns) │   51020.0 │         10815.0 │             10818.0 │   14021.0 │
-│       GC Time (ns) │       0.0 │             0.0 │                 0.0 │       0.0 │
-│         Allocs (B) │       2.0 │             0.0 │                 0.0 │       0.0 │
-│         Memory (B) │    2224.0 │             0.0 │                 0.0 │       0.0 │
-└────────────────────┴───────────┴─────────────────┴─────────────────────┴───────────┘
+┌───────────────┬───────────────────┬───────────────────┬─────────────────┬────────────┬───────────────┐
+│               │ FastHistograms:   | FastHistograms:   │ FastHistograms: │ StatsBase: │ StatsBase:    │
+|               | FixedWidth,       | VariableWidth,    | FixedWidth,     | FixedWidth | VariableWidth |
+|               | Arithmetic,       | BinarySearch,     | Arithmetic,     |            |               |
+|               | NoParallelization │ NoParallelization | SIMD            |            |               |
+├───────────────┼───────────────────┼───────────────────┼─────────────────┼────────────┼───────────────┤
+│ Min Time (ns) │           15592.0 │          100289.0 │         17634.0 │    74005.0 │      107417.0 │
+│  GC Time (ns) │               0.0 │               0.0 │             0.0 │        0.0 │           0.0 │
+│    Allocs (B) │               0.0 │               0.0 │             0.0 │        2.0 │           2.0 │
+│    Memory (B) │               0.0 │               0.0 │             0.0 │     2224.0 │         224.0 │
+└───────────────┴───────────────────┴───────────────────┴─────────────────┴────────────┴───────────────┘
 Benchmarking type=Float32, size=(256, 256)
-┌────────────────────┬───────────┬─────────────────┬─────────────────────┬───────────┐
-│               Rows │ StatsBase │ FH (NoParallel) │ FH (NoParallel, BS) │ FH (SIMD) │
-│             String │   Float64 │         Float64 │             Float64 │   Float64 │
-├────────────────────┼───────────┼─────────────────┼─────────────────────┼───────────┤
-│      Min Time (ns) │ 1.05138e6 │        214891.0 │            214821.0 │  271832.0 │
-│       GC Time (ns) │       0.0 │             0.0 │                 0.0 │       0.0 │
-│         Allocs (B) │       2.0 │             0.0 │                 0.0 │       0.0 │
-│         Memory (B) │    2224.0 │             0.0 │                 0.0 │       0.0 │
-└────────────────────┴───────────┴─────────────────┴─────────────────────┴───────────┘
+┌───────────────┬───────────────────┬───────────────────┬─────────────────┬────────────┬───────────────┐
+│               │ FastHistograms:   | FastHistograms:   │ FastHistograms: │ StatsBase: │ StatsBase:    │
+|               | FixedWidth,       | VariableWidth,    | FixedWidth,     | FixedWidth | VariableWidth |
+|               | Arithmetic,       | BinarySearch,     | Arithmetic,     |            |               |
+|               | NoParallelization │ NoParallelization | SIMD            |            |               |
+├───────────────┼───────────────────┼───────────────────┼─────────────────┼────────────┼───────────────┤
+│ Min Time (ns) │          309092.0 │         2.13267e6 │        332810.0 │  1.50458e6 │     2.30337e6 │
+│  GC Time (ns) │               0.0 │               0.0 │             0.0 │        0.0 │           0.0 │
+│    Allocs (B) │               0.0 │               0.0 │             0.0 │        2.0 │           2.0 │
+│    Memory (B) │               0.0 │               0.0 │             0.0 │     2224.0 │         224.0 │
+└───────────────┴───────────────────┴───────────────────┴─────────────────┴────────────┴───────────────┘
+┌───────────────┬─────────────────┬────────────┐
+│               │ FastHistograms: | StatsBase: │
+|               | FixedWidth,     | FixedWidth |
+|               | Arithmetic,     |            |
+|               | PrivateThreads  |            |
+├───────────────┼─────────────────┼────────────┤
+│ Min Time (ns) │       2.57596e8 │  3.01149e9 │
+│  GC Time (ns) │             0.0 │        0.0 │
+│    Allocs (B) │            11.0 │        2.0 │
+│    Memory (B) │          1056.0 │     4288.0 │
+└───────────────┴─────────────────┴────────────┘
+
 ```
