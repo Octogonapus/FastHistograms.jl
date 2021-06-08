@@ -1,7 +1,7 @@
 name = "FastHistograms"
 uuid = "06971c4e-2824-4b19-bcf3-55442efb9bc7"
 authors = ["Octogonapus <firey45@gmail.com> and contributors"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 ComputedFieldTypes = "459fdd68-db75-56b8-8c15-d717a790f88e"
