@@ -39,67 +39,67 @@ invalid_combination(::UnboundedWidth, ::HashFunction, ::SIMD) = true
     search_algorithms = [Arithmetic(), BinarySearch()]
     parallelizations = [NoParallelization(), SIMD(), PrivateThreads()]
 
-    # @testset "histogram computations BinType=$(bin_type)" for bin_type in bin_types
-    #     @testset "BinSearchAlgorithm=$(search_algorithm)" for search_algorithm in search_algorithms
-    #         @testset "HistogramParallelization=$(parallelization)" for parallelization in parallelizations
-    #             if invalid_combination(bin_type, search_algorithm, parallelization)
-    #                 continue
-    #             end
+    @testset "histogram computations BinType=$(bin_type)" for bin_type in bin_types
+        @testset "BinSearchAlgorithm=$(search_algorithm)" for search_algorithm in search_algorithms
+            @testset "HistogramParallelization=$(parallelization)" for parallelization in parallelizations
+                if invalid_combination(bin_type, search_algorithm, parallelization)
+                    continue
+                end
 
-    #             test_parameterized_hist(bin_type, search_algorithm, parallelization)
-    #         end
-    #     end
-    # end
+                test_parameterized_hist(bin_type, search_algorithm, parallelization)
+            end
+        end
+    end
 
-    # @testset "zero bins" begin
-    #     h = create_fast_histogram(FixedWidth(), Arithmetic(), NoParallelization(), [(0x00, 0xff, 16), (0x00, 0xff, 16)])
+    @testset "zero bins" begin
+        h = create_fast_histogram(FixedWidth(), Arithmetic(), NoParallelization(), [(0x00, 0xff, 16), (0x00, 0xff, 16)])
 
-    #     increment_bins!(h, rand(UInt8, 10, 10), rand(UInt8, 10, 10))
+        increment_bins!(h, rand(UInt8, 10, 10), rand(UInt8, 10, 10))
 
-    #     @test any(counts(h) .!= 0)
+        @test any(counts(h) .!= 0)
 
-    #     zero!(h)
-    #     @test all(counts(h) .== 0)
-    # end
+        zero!(h)
+        @test all(counts(h) .== 0)
+    end
 
-    # @testset "default hist bin type" begin
-    #     h = create_fast_histogram(FixedWidth(), Arithmetic(), NoParallelization(), [(0x00, 0xff, 16), (0x00, 0xff, 16)])
+    @testset "default hist bin type" begin
+        h = create_fast_histogram(FixedWidth(), Arithmetic(), NoParallelization(), [(0x00, 0xff, 16), (0x00, 0xff, 16)])
 
-    #     @test eltype(h) == UInt8
-    # end
+        @test eltype(h) == UInt8
+    end
 
-    # @testset "custom hist bin type" begin
-    #     h = create_fast_histogram(
-    #         FixedWidth(),
-    #         Arithmetic(),
-    #         NoParallelization(),
-    #         [(Int32(0), Int32(16), 16), (Int32(0), Int32(16), 16)],
-    #     )
+    @testset "custom hist bin type" begin
+        h = create_fast_histogram(
+            FixedWidth(),
+            Arithmetic(),
+            NoParallelization(),
+            [(Int32(0), Int32(16), 16), (Int32(0), Int32(16), 16)],
+        )
 
-    #     @test eltype(h) == Int32
-    # end
+        @test eltype(h) == Int32
+    end
 
-    # @testset "AHTL fixed data" begin
-    #     # Generate the data in the same way the AHTL test does
-    #     data = rand(Float32, 100000000) .* (512 - Float32(0.01))
+    @testset "AHTL fixed data" begin
+        # Generate the data in the same way the AHTL test does
+        data = rand(Float32, 100000000) .* (512 - Float32(0.01))
 
-    #     img_vec = vec(data)
-    #     sb_counts = StatsBase.fit(
-    #         StatsBase.Histogram,
-    #         img_vec,
-    #         range(Float32(0.0); stop = Float32(512.0), length = 513),
-    #     ).weights
+        img_vec = vec(data)
+        sb_counts = StatsBase.fit(
+            StatsBase.Histogram,
+            img_vec,
+            range(Float32(0.0); stop = Float32(512.0), length = 513),
+        ).weights
 
-    #     h = create_fast_histogram(
-    #         FastHistograms.FixedWidth(),
-    #         FastHistograms.Arithmetic(),
-    #         FastHistograms.PrivateThreads(),
-    #         [(Float32(0.0), Float32(512.0), 512)],
-    #     )
-    #     increment_bins!(h, data)
-    #     fh_counts = counts(h)
-    #     @test fh_counts == sb_counts
-    # end
+        h = create_fast_histogram(
+            FastHistograms.FixedWidth(),
+            FastHistograms.Arithmetic(),
+            FastHistograms.PrivateThreads(),
+            [(Float32(0.0), Float32(512.0), 512)],
+        )
+        increment_bins!(h, data)
+        fh_counts = counts(h)
+        @test fh_counts == sb_counts
+    end
 
     let bin_type = UnboundedWidth(), search_algorithm = HashFunction()
         @testset "HistogramParallelization=$(parallelization)" for parallelization in parallelizations
