@@ -27,6 +27,7 @@ include("test_text_hist.jl")
 invalid_combination(::BinType, ::BinSearchAlgorithm, ::HistogramParallelization) = false
 # SIMD binary search needs a special implementation that I don't have yet
 invalid_combination(::BinType, ::BinarySearch, ::SIMD) = true
+invalid_combination(::Union{FixedWidth, VariableWidth}, ::BinarySearch, ::SIMD) = true
 # Arithmetic only works for fixed width
 invalid_combination(::Union{VariableWidth,UnboundedWidth}, ::Arithmetic, ::HistogramParallelization) = true
 # Text histograms can only use UnboundedWidth, HashFunction, and NoParallelization or PrivateThreads. SIMD not implemented yet.
