@@ -19,19 +19,15 @@ eltype(::RealHistogram{N,B,E,S,P}) where {N,B,E,S,P} = E
 """
     create_fast_histogram(
         ::FixedWidth,
-        ::B,
+        ::S,
         ::P,
-        ::Dims,
-        first_bin::E,
-        last_bin::E,
-        nbins::Int,
-    ) where {N,E<:Real,B<:BinSearchAlgorithm,P<:HistogramParallelization,Dims}
+        axes_data::AbstractVector{Tuple{E,E,Int}}, # first, last, nbins
+    ) where {E<:Real,S<:BinSearchAlgorithm,P<:HistogramParallelization}
 
-Creates a histogram for fixed-width bins.
-`B` and `P` can be any bin search algorithm or parallelization scheme, respectively.
-`Dims` is a `Val` representing the number of dimensions of the histogram; it can be `Val{1}()` or `Val{2}()`.
-The `first_bin` and `last_bin` are the values of the lowest and highest bins, respectively.
-`nbins` is the number of bins (not the number of edges).
+Creates a histogram with fixed-width bins.
+`S` and `P` can be any bin search algorithm or parallelization scheme, respectively.
+The `axes_data` define the range of each axis of the histogram. Provide one element for each dimension. Each element
+has the form `(first_bin, last_bin, nbins)`.
 """
 function create_fast_histogram(
     ::FixedWidth,
@@ -72,6 +68,19 @@ function create_fast_histogram(
     RealHistogram{length(axes_data),FixedWidth,E,S,P}(weights, subweights, SVector{length(axes)}(axes))
 end
 
+"""
+    create_fast_histogram(
+        ::VariableWidth,
+        ::BinarySearch,
+        ::P,
+        edges::AbstractVector{<:AbstractVector}, # Vector of edges, one edge vector per dimension
+    ) where {P<:HistogramParallelization}
+
+Creates a histogram with variable-width bins (i.e. bins of possibly different widths).
+`P` can be any parallelization scheme.
+The `edges` define the bin edges for each axis of the histogram. Provide one element for each dimension. Each element
+has the form `(first edge, second edge, ..., nth edge)`.
+"""
 function create_fast_histogram(
     ::VariableWidth,
     ::BinarySearch,

@@ -4,11 +4,8 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://Octogonapus.github.io/FastHistograms.jl/dev)
 [![Build Status](https://github.com/Octogonapus/FastHistograms.jl/workflows/CI/badge.svg)](https://github.com/Octogonapus/FastHistograms.jl/actions)
 [![Coverage](https://codecov.io/gh/Octogonapus/FastHistograms.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/Octogonapus/FastHistograms.jl)
-[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 
 FastHistograms declares and implements a minimal histogram interface with a focus on speed.
-This package does not aim to implement general histogram algorithms that work for a wide array of data types; for that
-purpose, consider [StatsBase](https://github.com/JuliaStats/StatsBase.jl).
 
 ## Example
 
@@ -16,16 +13,14 @@ purpose, consider [StatsBase](https://github.com/JuliaStats/StatsBase.jl).
 julia> using FastHistograms, Random
 
 # Create a 2D histogram for 8-bit integer data.
-# Use fixed-width bins with an optimized bin search algorithm (Arithmetic) for fixed-width bins.
-# Don't use any parallelization because our data are small.
 julia> h = create_fast_histogram(
+    # Use fixed-width bins with an optimized bin search algorithm (Arithmetic)
+    #  for fixed-width bins.
     FastHistograms.FixedWidth(),
     FastHistograms.Arithmetic(),
+    # Don't use any parallelization because our data are small.
     FastHistograms.NoParallelization(),
-    Val{2}(), # 2D histogram
-    0x00,     # Lowest bucket edge
-    0xff,     # Highest bucket edge
-    4,        # Number of buckets
+    [(0x00, 0xff, 4), (0x00, 0xff, 4)],
 );
 
 # Create two random images to compute the joint histogram for
@@ -109,5 +104,4 @@ Benchmarking type=Float32, size=(256, 256)
 │    Allocs (B) │            11.0 │        2.0 │
 │    Memory (B) │          1056.0 │     4288.0 │
 └───────────────┴─────────────────┴────────────┘
-
 ```

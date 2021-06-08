@@ -8,6 +8,12 @@ BinSearchAlgorithm(::TextHistogram{P}) where {P} = HashFunction()
 HistogramParallelization(::TextHistogram{P}) where {P} = P()
 eltype(::TextHistogram{P}) where {P} = String
 
+"""
+    create_fast_histogram(::UnboundedWidth, ::HashFunction, ::P) where {P<:HistogramParallelization}
+
+Creates a histogram for 1D text data.
+`P` can be any parallelization scheme.
+"""
 function create_fast_histogram(::UnboundedWidth, ::HashFunction, ::P) where {P<:HistogramParallelization}
     table = Dict{String,Int}()
     subtable = map(x -> Dict{String,Int}(), 1:Threads.nthreads())
