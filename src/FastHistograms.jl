@@ -34,16 +34,14 @@ FastHistograms declares and implements a minimal histogram interface with a focu
 julia> using FastHistograms, Random
 
 # Create a 2D histogram for 8-bit integer data.
-# Use fixed-width bins with an optimized bin search algorithm (Arithmetic) for fixed-width bins.
-# Don't use any parallelization because our data are small.
 julia> h = create_fast_histogram(
+    # Use fixed-width bins with an optimized bin search algorithm (Arithmetic)
+    #  for fixed-width bins.
     FastHistograms.FixedWidth(),
     FastHistograms.Arithmetic(),
+    # Don't use any parallelization because our data are small.
     FastHistograms.NoParallelization(),
-    Val{2}(), # 2D histogram
-    0x00,     # Lowest bucket edge
-    0xff,     # Highest bucket edge
-    4,        # Number of buckets
+    [(0x00, 0xff, 4), (0x00, 0xff, 4)],
 );
 
 # Create two random images to compute the joint histogram for
