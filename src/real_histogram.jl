@@ -111,5 +111,5 @@ end
 
 get_weights(h::RealHistogram) = h.weights
 
-# For SIMD
+# For SIMD and PrivateThreads
 get_subweights(h::RealHistogram) = h.subweights

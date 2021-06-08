@@ -45,6 +45,7 @@ Sets all bin counts of the histogram `h` to zero. All histograms must implement 
 function zero!(h)
     get_weights(h) .= 0
     get_subweights(h) .= 0
+    nothing
 end
 
 function increment_bins!(::BinSearchAlgorithm, ::NoParallelization, h, data)
@@ -146,14 +147,9 @@ function increment_bins!(
     nothing
 end
 
-function increment_bins!(
-    ::BinSearchAlgorithm,
-    ::PrivateThreads,
-    h,
-    data::Union{AbstractVector,AbstractMatrix},
-)
+function increment_bins!(::BinSearchAlgorithm, ::PrivateThreads, h, data::Union{AbstractVector,AbstractMatrix})
     nthreads = size(get_subweights(h), 2)
-    Threads.@threads for thread_idx in 1:nthreads
+    Threads.@threads for thread_idx = 1:nthreads
         if length(data) <= nthreads
             if thread_idx == 1
                 start_idx = 1
@@ -165,14 +161,14 @@ function increment_bins!(
             end
         else
             step = length(data) ÷ nthreads
-            start_idx = (thread_idx-1) * step + 1
-            end_idx = step*thread_idx
+            start_idx = (thread_idx - 1) * step + 1
+            end_idx = step * thread_idx
             if end_idx + step > length(data) - (length(data) % nthreads)
                 end_idx = length(data)
             end
         end
 
-        for i in start_idx:end_idx
+        for i = start_idx:end_idx
             @inbounds i = bin_search(h, 1, data[i])
             @inbounds get_subweights(h)[i, thread_idx] += 1
         end
@@ -191,7 +187,7 @@ function increment_bins!(
     data2::Union{AbstractVector,AbstractMatrix},
 )
     nthreads = size(get_subweights(h), 3)
-    Threads.@threads for thread_idx in 1:nthreads
+    Threads.@threads for thread_idx = 1:nthreads
         if length(data1) <= nthreads
             if thread_idx == 1
                 start_idx = 1
@@ -203,14 +199,14 @@ function increment_bins!(
             end
         else
             step = length(data1) ÷ nthreads
-            start_idx = (thread_idx-1) * step + 1
-            end_idx = step*thread_idx
+            start_idx = (thread_idx - 1) * step + 1
+            end_idx = step * thread_idx
             if end_idx + step > length(data1) - (length(data1) % nthreads)
                 end_idx = length(data1)
             end
         end
 
-        for i in start_idx:end_idx
+        for i = start_idx:end_idx
             @inbounds ix = bin_search(h, 1, data1[i])
             @inbounds iy = bin_search(h, 2, data2[i])
             @inbounds get_subweights(h)[ix, iy, thread_idx] += 1
@@ -218,6 +214,54 @@ function increment_bins!(
     end
 
     sum!(h.weights, get_subweights(h))
+
+    nothing
+end
+
+function increment_bins!(::HashFunction, ::NoParallelization, h, data::AbstractVector{<:AbstractString})
+    t = get_table(h)
+    for d in data
+        t[d] = get!(t, d, 0) + 1
+    end
+
+    nothing
+end
+
+function increment_bins!(::HashFunction, ::PrivateThreads, h, data::AbstractVector{<:AbstractString})
+    nthreads = length(get_subtable(h))
+    Threads.@threads for thread_idx = 1:nthreads
+        if length(data) <= nthreads
+            if thread_idx == 1
+                start_idx = 1
+                end_idx = length(data)
+            else
+                # Make an empty range
+                start_idx = 1
+                end_idx = 0
+            end
+        else
+            step = length(data) ÷ nthreads
+            start_idx = (thread_idx - 1) * step + 1
+            end_idx = step * thread_idx
+            if end_idx + step > length(data) - (length(data) % nthreads)
+                end_idx = length(data)
+            end
+        end
+
+        st = get_subtable(h)[thread_idx]
+        for i = start_idx:end_idx
+            @inbounds d = data[i]
+            st[d] = get!(st, d, 0) + 1
+        end
+    end
+
+    t = get_table(h)
+    for thread_idx = 1:nthreads
+        st = get_subtable(h)[thread_idx]
+        for (k, v) in pairs(st)
+            t[k] = get!(t, k, 0) + v
+        end
+    end
 
     nothing
 end

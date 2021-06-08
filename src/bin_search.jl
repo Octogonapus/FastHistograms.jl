@@ -1,4 +1,12 @@
-"A trait for the ways the bin search step can be implemented."
+"""
+A trait for the ways the bin search step can be implemented.
+
+Histograms that operate on real-valued data must implement the following functions, in addition to any trait-specific functions:
+- `get_weights(hist)::AbstractArray{Int,N}` Returns the weights (i.e. counts) array for an N-dimensional histogram.
+
+Histograms that operate on text data must implement the following functions, in addition to any trait-specific functions:
+- `get_table(hist)::AbstractDict{String,Int}` Returns the table for the histogram.
+"""
 abstract type BinSearchAlgorithm end
 
 """
@@ -18,6 +26,11 @@ Requires these functions to be defined:
 - `bin_edges(hist, axis)::Vector{Int}` Returns a sorted vector of the bin edges for the axis. The implementation should use `@propagate_inbounds` for good performance.
 """
 struct BinarySearch <: BinSearchAlgorithm end
+
+"""
+Uses a hash function to find the bin to update. Compatible only with the UnboundedWidth bin type.
+"""
+struct HashFunction <: BinSearchAlgorithm end
 
 BinSearchAlgorithm(t) = error("BinSearchAlgorithm not defined for $(typeof(t))")
 

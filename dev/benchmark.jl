@@ -35,11 +35,7 @@ function bench_noparallel(img1, img2)
         (0x00:UInt8(16):0x10f, 0x00:UInt8(16):0x10f),
     )
 
-    bench_sb_vw = @benchmarkable StatsBase.fit(
-        StatsBase.Histogram,
-        ($img1_vec, $img2_vec),
-        ($edge1, $edge2),
-    )
+    bench_sb_vw = @benchmarkable StatsBase.fit(StatsBase.Histogram, ($img1_vec, $img2_vec), ($edge1, $edge2))
 
     return bench_fh_fw_a_np, bench_fh_vw_bs_np, bench_fh_fw_a_simd, bench_sb_fw, bench_sb_vw
 end

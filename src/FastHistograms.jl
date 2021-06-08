@@ -8,7 +8,8 @@ using StaticArrays
 include("traits.jl")
 include("bin_search.jl")
 include("bin_update.jl")
-include("fixed_width_histogram.jl")
+include("real_histogram.jl")
+include("text_histogram.jl")
 
 export create_fast_histogram, bin_search, increment_bins!, counts, zero!
 
