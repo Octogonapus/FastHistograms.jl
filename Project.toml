@@ -1,7 +1,17 @@
 name = "FastHistograms"
 uuid = "06971c4e-2824-4b19-bcf3-55442efb9bc7"
 authors = ["Octogonapus <firey45@gmail.com> and contributors"]
-version = "0.1.0"
+version = "0.2.0"
+
+[deps]
+ComputedFieldTypes = "459fdd68-db75-56b8-8c15-d717a790f88e"
+LoopVectorization = "bdcacae8-1622-11e9-2a5c-532679323890"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
+ComputedFieldTypes = "0.1"
+LoopVectorization = "0.12"
+StatsBase = "0.33"
 julia = "1.5"

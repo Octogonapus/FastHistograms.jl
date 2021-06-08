@@ -1,91 +1,66 @@
 module FastHistograms
 
-abstract type FastHistogram end
+import Base: eltype, @propagate_inbounds
+using ComputedFieldTypes
+using LoopVectorization
+using StaticArrays
 
-include("single_thread_fixed_width_2d_hist.jl")
+include("traits.jl")
+include("bin_search.jl")
+include("bin_update.jl")
+include("real_histogram.jl")
+include("text_histogram.jl")
 
-export FastHistogram, SingleThreadFixedWidth2DHistogram
-export calc_hist!, counts, zero!, bin_type
-
-"""
-    calc_hist!(hist, img)
-    calc_hist!(hist, img1, img2)
-
-Computes the histogram of the given data. This function takes two or three arguments. The first argument must be the
-histogram structure (a subtype of `AbstractHistogram`). The second and optional third argument(s) must be the data
-to operate on. The type of the histogram determines whether one or two additional arguments are needed. For example,
-a 2D histogram requires two additional arguments. A typical 1D histogram requires only one.
-
-Implementations of this function are free to implement any optimizations they wish as long as the histogram is correct
-once this function exits. This function is not required to be thread-safe. Implementations are encouraged to create
-descriptive names for their subtypes of `AbstractHistogram` that describe which optimizations are implemented. For
-example, `SingleThreadFixedWidth2DHistogram` does not implement thread-level parallelization by design.
-"""
-function calc_hist! end
+export create_fast_histogram, bin_search, increment_bins!, counts, zero!
 
 """
-    counts(hist)
+    create_fast_histogram(
+        ::BinType,
+        ::BinSearchAlgorithm,
+        ::HistogramParallelization,
+        args...
+    )
 
-Returns the count in each bin of the histogram. This function takes one argument: the histogram structure.
-
-This function is not required to be thread-safe.
+Creates a histogram with the given `BinType`, `BinSearchAlgorithm`, and `HistogramParallelization` traits.
+Methods of this function will also require additional arguments (here `args...`) that depend on the combination of
+traits selected.
 """
-function counts end
-
-"""
-    zero!(hist)
-
-Sets the count in each bin to zero. This function takes one argument: the histogram structure.
-
-This function is not required to be thread-safe.
-"""
-function zero! end
-
-"""
-    bin_type(hist)
-
-Returns the type of the bin used in the histogram. This function takes one argument: the histogram structure.
-
-This function is not required to be thread-safe.
-"""
-function bin_type end
+create_fast_histogram
 
 """
 FastHistograms declares and implements a minimal histogram interface with a focus on speed.
 
-```julia
-using FastHistograms, Random
+```julia-repl
+julia> using FastHistograms, Random
 
-h = SingleThreadFixedWidth2DHistogram()
+# Create a 2D histogram for 8-bit integer data.
+# Use fixed-width bins with an optimized bin search algorithm (Arithmetic) for fixed-width bins.
+# Don't use any parallelization because our data are small.
+julia> h = create_fast_histogram(
+    FastHistograms.FixedWidth(),
+    FastHistograms.Arithmetic(),
+    FastHistograms.NoParallelization(),
+    Val{2}(), # 2D histogram
+    0x00,     # Lowest bucket edge
+    0xff,     # Highest bucket edge
+    4,        # Number of buckets
+);
 
-img1 = zeros(10, 10)
-img1[:, 6:end] .= 0xff
+# Create two random images to compute the joint histogram for
+julia> img1 = rand(0x00:0xff, 32, 32);
 
-img2 = zeros(10, 10)
-img2[6:end, :] .= 0xff
+julia> img2 = rand(0x00:0xff, 32, 32);
 
 # Compute the histogram bin counts
-calc_hist!(h, img1, img2)
+julia> increment_bins!(h, img1, img2)
 
-@show counts(h) # Get the bin counts
-
-16×16 Matrix{Int64}:
- 25  0  0  0  0  0  0  0  0  0  0  0  0  0  0  25
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
-  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0
- 25  0  0  0  0  0  0  0  0  0  0  0  0  0  0  25
+# Get the bin counts
+julia> counts(h)
+4×4 Matrix{Int64}:
+ 61  64  67  64
+ 65  59  72  65
+ 61  66  71  61
+ 53  67  63  65
 ```
 """
 FastHistograms
